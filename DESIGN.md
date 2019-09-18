@@ -2,23 +2,17 @@
 
 ```
 mc init
-# after etcd
-# before docker, flannel
+# after etcd, flannel
+# before docker
 ```
-- install mc wrapper
 - checks etcd for bucc node
 -- starts election if not found
 - writes drop-ins for managed unit files
 - reload systemd (dbus)
-
-```
-mc register-node
-# after flannel
-# before docker
-```
 - generate node config (docker certs, host, subnet) and store in etcd
 - make flannel subnet persistent (remove ttl)
 - write docker certs to disk
+
 
 ```
 mc bucc-up
