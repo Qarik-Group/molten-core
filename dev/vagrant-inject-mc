@@ -1,0 +1,14 @@
+#!/bin/bash -e
+
+export GOOS=linux
+export GOARCH=amd64
+go build -o mc-${GOOS}-${GOARCH} main.go
+
+pushd ../coreos-vagrant
+vagrant ssh-config > ssh.config.tmp
+for host in core-01 core-02 core-03; do
+    scp -F ssh.config.tmp ../molten-core/mc-linux-amd64 ${host}:/tmp/mc
+    ssh -F ssh.config.tmp ${host} 'sudo mkdir -p /opt/bin && sudo mv /tmp/mc /opt/bin/mc && chmod +x /opt/bin/mc'
+done
+rm ssh.config.tmp
+popd
