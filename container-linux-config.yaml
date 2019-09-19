@@ -29,6 +29,7 @@ systemd:
       [Unit]
       Description=MoltenCore
       Requires=etcd-member.service flanneld.service coreos-metadata.service
+      After=etcd-member.service flanneld.service coreos-metadata.service
 
       [Service]
       Type=oneshot

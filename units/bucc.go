@@ -6,7 +6,8 @@ import (
 
 var (
 	BUCC Unit = Unit{
-		DropIn: []*unit.UnitOption{
+		Name: "bucc.service",
+		Contents: []*unit.UnitOption{
 			unit.NewUnitOption("Unit", "Description", "BUCC - BOSH UAA Credhub and Concourse"),
 			unit.NewUnitOption("Unit", "After", "docker.service"),
 			unit.NewUnitOption("Unit", "Wants", "docker.service"),
