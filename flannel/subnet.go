@@ -10,6 +10,10 @@ import (
 	"go.etcd.io/etcd/client"
 )
 
+const (
+	EtcdSubnetsPath string = "/coreos.com/network/subnets"
+)
+
 func PersistSubnetReservations() error {
 	kapi, err := util.NewEtcdV2Client()
 	if err != nil {
@@ -17,7 +21,7 @@ func PersistSubnetReservations() error {
 	}
 
 	ctx := context.Background()
-	resp, err := kapi.Get(ctx, "/flannel/network/subnets", nil)
+	resp, err := kapi.Get(ctx, EtcdSubnetsPath, nil)
 	if err != nil {
 		return fmt.Errorf("failed to list flannel subnets: %s", err)
 	}

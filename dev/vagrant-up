@@ -1,0 +1,34 @@
+#!/bin/bash -e
+
+# export GOOS=linux
+# export GOARCH=amd64
+# go build -o mc-${GOOS}-${GOARCH} main.go
+
+ct -in-file container-linux-config.yaml \
+   -out-file ../coreos-vagrant/config.ign \
+   -platform vagrant-virtualbox -pretty -strict
+
+pushd ../coreos-vagrant
+cat <<EOF > config.rb
+# Size of the CoreOS cluster created by Vagrant
+\$num_instances=3
+
+# Official CoreOS channel from which updates should be downloaded
+\$update_channel='alpha'
+
+\$new_discovery_url="https://discovery.etcd.io/new?size=#{\$num_instances}"
+
+if ARGV[0].eql?('up')
+  require 'open-uri'
+  token = open(\$new_discovery_url).read
+  data = File.read('config.ign')
+  data.gsub!(/https:\/\/discovery.etcd.io\/[^"]+/, (token + '\\\\'))
+  File.open('config.ign', 'w') { |file| file.write(data) }
+end
+EOF
+
+# vagrant ssh-config > ssh.config.tmp
+# scp -F ssh.config.tmp ../molten-core/mc-linux-amd64 core-01:/tmp/mc
+# ssh -F ssh.config.tmp core-01 'sudo mkdir -p /opt/bin && sudo mv /tmp/mc /opt/bin/mc && chmod +x /opt/bin/mc'
+vagrant up --parallel
+popd
