@@ -15,7 +15,8 @@ const (
 )
 
 func PersistSubnetReservations() error {
-	kapi, err := util.NewEtcdV2Client()
+	etcdClient, err := util.NewEtcdV2Client()
+	kapi, err := util.NewAPIClient(etcdClient)
 	if err != nil {
 		return err
 	}
