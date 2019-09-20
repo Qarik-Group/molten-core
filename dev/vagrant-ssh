@@ -1,0 +1,8 @@
+#!/bin/bash -e
+pushd ../coreos-vagrant
+
+node=${@:-1}
+
+vagrant ssh core-0${node}
+
+popd
