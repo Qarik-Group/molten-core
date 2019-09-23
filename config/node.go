@@ -41,7 +41,11 @@ func LoadNodeConfig() (*NodeConfig, error) {
 		return nil, fmt.Errorf("failed to lookup node address: %s", err)
 	}
 
-	subnet, err := flannel.LookupNodeSubnet(ip)
+	subnets, err := flannel.GetSubnets(&ip)
+	if err != nil || len(subnets) == 0 {
+		return nil, fmt.Errorf("failed to get flannel subnet: %s", err)
+	}
+	subnet := subnets[0]
 
 	kapi, err := util.NewEtcdV2Client()
 	if err != nil {

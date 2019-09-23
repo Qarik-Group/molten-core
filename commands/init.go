@@ -39,14 +39,14 @@ func (cmd *InitCommand) run(c *kingpin.ParseContext) error {
 		return fmt.Errorf("failed enable systemd units: %s", err)
 	}
 
-	cmd.logger.Printf("Persisting Flannel subnet reservations")
-	if err = flannel.PersistSubnetReservations(); err != nil {
-		return fmt.Errorf("failed to persist flannel subnets: %s", err)
-	}
-
-	_, err = config.LoadNodeConfig()
+	conf, err := config.LoadNodeConfig()
 	if err != nil {
 		return fmt.Errorf("failed load node config: %s", err)
+	}
+
+	cmd.logger.Printf("Removing Flannel subnet TTL")
+	if err = flannel.RemoveSubnetTTL(conf.Subnet); err != nil {
+		return fmt.Errorf("failed to persist flannel subnets: %s", err)
 	}
 
 	// - write docker certs to disk

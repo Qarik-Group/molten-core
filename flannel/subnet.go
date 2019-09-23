@@ -1,11 +1,13 @@
 package flannel
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -23,52 +25,24 @@ type Subnet struct {
 	cidr *net.IPNet
 }
 
-func LookupNodeSubnet(nodeIP net.IP) (Subnet, error) {
-	kapi, err := util.NewEtcdV2Client()
-	if err != nil {
-		return Subnet{}, err
-	}
-
-	ctx := context.Background()
-	resp, err := kapi.Get(ctx, EtcdSubnetsPath, &client.GetOptions{Recursive: true})
-	if err != nil {
-		return Subnet{}, fmt.Errorf("failed to list flannel subnets: %s", err)
-	}
-
-	for _, n := range resp.Node.Nodes {
-		reservation := struct {
-			PublicIP net.IP
-		}{}
-		err = json.Unmarshal([]byte(n.Value), &reservation)
-		if err != nil {
-			return Subnet{}, fmt.Errorf("failed to unmarshal flannel subnet reservation: %s", err)
-		}
-		if reservation.PublicIP.Equal(nodeIP) {
-			return parseFlannelSubnet(n.Key)
-		}
-	}
-	return Subnet{}, fmt.Errorf("failed to find subnet for: %s", nodeIP.String())
-}
-
-func PersistSubnetReservations() error {
+func RemoveSubnetTTL(s Subnet) error {
 	kapi, err := util.NewEtcdV2Client()
 	if err != nil {
 		return err
 	}
 
 	ctx := context.Background()
-	resp, err := kapi.Get(ctx, EtcdSubnetsPath, nil)
+	resp, err := kapi.Get(ctx, s.etcdKey(), nil)
 	if err != nil {
-		return fmt.Errorf("failed to list flannel subnets: %s", err)
+		return fmt.Errorf("failed to get flannel subnet: %s", err)
 	}
 
-	for _, n := range resp.Node.Nodes {
-		_, err := kapi.Set(ctx, n.Key, n.Value, &client.SetOptions{
-			TTL: 0 * time.Second})
-		if err != nil {
-			return fmt.Errorf("failed to update subnet TTL for %s got: %s", n.Key, err)
-		}
+	_, err = kapi.Set(ctx, resp.Node.Key, resp.Node.Value, &client.SetOptions{
+		TTL: 0 * time.Second})
+	if err != nil {
+		return fmt.Errorf("failed to update subnet TTL for %s got: %s", resp.Node.Key, err)
 	}
+
 	return nil
 }
 
@@ -93,6 +67,55 @@ func (s *Subnet) UnmarshalJSON(data []byte) error {
 	_, cidr, err := net.ParseCIDR(parsed)
 	s.cidr = cidr
 	return err
+}
+
+func (s Subnet) etcdKey() string {
+	return filepath.Join(EtcdSubnetsPath, strings.Replace(s.cidr.String(), "/", "-", -1))
+}
+
+func GetSubnets(query *net.IP) ([]Subnet, error) {
+	kapi, err := util.NewEtcdV2Client()
+	if err != nil {
+		return []Subnet{}, err
+	}
+
+	ctx := context.Background()
+	resp, err := kapi.Get(ctx, EtcdSubnetsPath, &client.GetOptions{Recursive: true})
+	if err != nil {
+		return []Subnet{}, fmt.Errorf("failed to list flannel subnets: %s", err)
+	}
+
+	var subnets map[string]Subnet
+	var ips []net.IP
+	for _, n := range resp.Node.Nodes {
+		res := struct {
+			PublicIP net.IP
+		}{}
+		err = json.Unmarshal([]byte(n.Value), &res)
+		if err != nil {
+			return []Subnet{}, fmt.Errorf("failed to unmarshal flannel subnet reservation: %s", err)
+		}
+		subnet, err := parseFlannelSubnet(n.Key)
+		if err != nil {
+			return []Subnet{}, fmt.Errorf("failed to parse flannel subnet: %s", err)
+		}
+
+		if query != nil && res.PublicIP.Equal(*query) {
+			return []Subnet{subnet}, nil
+		}
+		subnets[res.PublicIP.String()] = subnet
+		ips = append(ips, res.PublicIP)
+	}
+
+	sort.Slice(ips, func(i, j int) bool {
+		return bytes.Compare(ips[i], ips[j]) < 0
+	})
+
+	out := []Subnet{}
+	for _, ip := range ips {
+		out = append(out, subnets[ip.String()])
+	}
+	return out, nil
 }
 
 func parseFlannelSubnet(s string) (Subnet, error) {
