@@ -51,8 +51,7 @@ func LookupNodeSubnet(nodeIP net.IP) (Subnet, error) {
 }
 
 func PersistSubnetReservations() error {
-	etcdClient, err := util.NewEtcdV2Client()
-	kapi, err := util.NewAPIClient(etcdClient)
+	kapi, err := util.NewEtcdV2Client()
 	if err != nil {
 		return err
 	}

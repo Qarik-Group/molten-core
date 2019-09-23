@@ -8,7 +8,7 @@ import (
 	"go.etcd.io/etcd/clientv3"
 )
 
-func NewEtcdV2Client() (client.Client, error) {
+func NewEtcdV2Client() (client.KeysAPI, error) {
 	cfg := client.Config{
 		Endpoints:               []string{"http://127.0.0.1:2379"},
 		Transport:               client.DefaultTransport,
@@ -19,8 +19,7 @@ func NewEtcdV2Client() (client.Client, error) {
 		return nil, fmt.Errorf("failed to create etcd v2 client: %s", err)
 
 	}
-	// return client.NewKeysAPI(c), nil
-	return c, nil
+	return client.NewKeysAPI(c), nil
 }
 
 func NewEtcdV3Client() (*clientv3.Client, error) {
