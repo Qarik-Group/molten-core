@@ -54,6 +54,10 @@ func (s Subnet) IP(i uint8) (net.IP, error) {
 	return ip, nil
 }
 
+func (s Subnet) Equals(subnet Subnet) bool {
+	return s.cidr.String() == subnet.cidr.String()
+}
+
 func (s Subnet) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.cidr.String())
 }
@@ -70,7 +74,16 @@ func (s *Subnet) UnmarshalJSON(data []byte) error {
 }
 
 func (s Subnet) etcdKey() string {
-	return filepath.Join(EtcdSubnetsPath, strings.Replace(s.cidr.String(), "/", "-", -1))
+	return filepath.Join(EtcdSubnetsPath,
+		strings.Replace(s.cidr.String(), "/", "-", -1))
+}
+
+func IsFirstSubnet(subnet Subnet) (bool, error) {
+	subnets, err := GetSubnets(nil)
+	if err != nil {
+		return false, err
+	}
+	return subnet.Equals(subnets[0]), nil
 }
 
 func GetSubnets(query *net.IP) ([]Subnet, error) {
@@ -85,7 +98,7 @@ func GetSubnets(query *net.IP) ([]Subnet, error) {
 		return []Subnet{}, fmt.Errorf("failed to list flannel subnets: %s", err)
 	}
 
-	var subnets map[string]Subnet
+	subnets := make(map[string]Subnet)
 	var ips []net.IP
 	for _, n := range resp.Node.Nodes {
 		res := struct {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/starkandwayne/molten-core/bucc"
 	"github.com/starkandwayne/molten-core/config"
 	"github.com/starkandwayne/molten-core/flannel"
 	"github.com/starkandwayne/molten-core/units"
@@ -26,22 +25,23 @@ func (cmd *InitCommand) run(c *kingpin.ParseContext) error {
 		units.Docker,
 	}
 
-	isBuccHost, err := bucc.IsBuccHost()
+	conf, err := config.LoadNodeConfig()
 	if err != nil {
-		return fmt.Errorf("failed to determine BUCC host: %s", err)
+		return fmt.Errorf("failed load node config: %s", err)
 	}
-	if isBuccHost {
+
+	isFirstHost, err := flannel.IsFirstSubnet(conf.Subnet)
+	if err != nil {
+		return fmt.Errorf("failed to determine first host: %s", err)
+	}
+
+	if isFirstHost {
 		u = append(u, units.BUCC)
 	}
 
 	err = units.Enable(u)
 	if err != nil {
 		return fmt.Errorf("failed enable systemd units: %s", err)
-	}
-
-	conf, err := config.LoadNodeConfig()
-	if err != nil {
-		return fmt.Errorf("failed load node config: %s", err)
 	}
 
 	cmd.logger.Printf("Removing Flannel subnet TTL")
