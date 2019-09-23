@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/starkandwayne/molten-core/bucc"
+	"github.com/starkandwayne/molten-core/config"
 	"github.com/starkandwayne/molten-core/flannel"
 	"github.com/starkandwayne/molten-core/units"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -41,6 +42,11 @@ func (cmd *InitCommand) run(c *kingpin.ParseContext) error {
 	cmd.logger.Printf("Persisting Flannel subnet reservations")
 	if err = flannel.PersistSubnetReservations(); err != nil {
 		return fmt.Errorf("failed to persist flannel subnets: %s", err)
+	}
+
+	_, err = config.LoadNodeConfig()
+	if err != nil {
+		return fmt.Errorf("failed load node config: %s", err)
 	}
 
 	// - write docker certs to disk

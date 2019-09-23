@@ -59,6 +59,9 @@ func Enable(units []Unit) error {
 			if err = os.MkdirAll(filepath.Dir(dpath), 0755); err != nil {
 				return fmt.Errorf("failed to link systemd dropin %s got: %s", d.Name, err)
 			}
+			if err = os.RemoveAll(dpath); err != nil {
+				return fmt.Errorf("failed to remove symlink target: %s", err)
+			}
 			if err = os.Symlink(spath, dpath); err != nil {
 				return fmt.Errorf("failed to link systemd dropin %s got: %s", d.Name, err)
 			}

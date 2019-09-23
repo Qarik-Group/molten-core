@@ -11,6 +11,7 @@ var (
 		Contents: []*unit.UnitOption{
 			unit.NewUnitOption("Unit", "Description", "Docker Secured Socket for the API"),
 			unit.NewUnitOption("Socket", "ListenStream", "2376"),
+			unit.NewUnitOption("Socket", "BindIPv6Only", "both"),
 			unit.NewUnitOption("Socket", "Service", "docker.service"),
 			unit.NewUnitOption("Install", "WantedBy", "sockets.target"),
 		},

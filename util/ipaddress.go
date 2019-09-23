@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"net"
 	"os"
 )
 
@@ -30,7 +31,7 @@ var (
 	}
 )
 
-func LookupIpV4Address(public bool) (string, error) {
+func LookupIpV4Address(public bool) (net.IP, error) {
 	var envNames []string = envNamesV4Private
 	if public {
 		envNames = envNamesV4Public
@@ -39,8 +40,8 @@ func LookupIpV4Address(public bool) (string, error) {
 	for _, envName := range envNames {
 		v := os.Getenv(envName)
 		if v != "" {
-			return v, nil
+			return net.ParseIP(v), nil
 		}
 	}
-	return "", errors.New("Ip address lookup failed")
+	return net.IP{}, errors.New("Ip address lookup failed")
 }
