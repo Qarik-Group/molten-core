@@ -32,7 +32,7 @@ type Docker struct {
 
 type NodeConfig struct {
 	Subnet flannel.Subnet
-	Docker
+	Docker Docker
 }
 
 func LoadNodeConfig() (*NodeConfig, error) {
@@ -124,7 +124,7 @@ func newDocker(s flannel.Subnet) (Docker, error) {
 	}
 
 	return Docker{
-		Endpoint: fmt.Sprintf("tcp://%s:%d", endpoint, DockerTLSPort),
+		Endpoint: fmt.Sprintf("%s:%d", endpoint, DockerTLSPort),
 		CA:       caCert,
 		Server:   serverCert,
 		Client:   clientCert,

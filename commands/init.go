@@ -19,15 +19,16 @@ func (cmd *InitCommand) register(app *kingpin.Application) {
 }
 
 func (cmd *InitCommand) run(c *kingpin.ParseContext) error {
-	cmd.logger.Printf("Writing MoltenCore managed systemd unit files")
-	u := []units.Unit{
-		units.DockerTLSSocket,
-		units.Docker,
-	}
-
+	cmd.logger.Printf("Loading node config")
 	conf, err := config.LoadNodeConfig()
 	if err != nil {
 		return fmt.Errorf("failed load node config: %s", err)
+	}
+
+	cmd.logger.Printf("Writing Docker TLS certs")
+	err = units.WriteDockerTLSCerts(conf.Docker)
+	if err != nil {
+		return fmt.Errorf("failed to write docker certs: %s", err)
 	}
 
 	isFirstHost, err := flannel.IsFirstSubnet(conf.Subnet)
@@ -35,6 +36,11 @@ func (cmd *InitCommand) run(c *kingpin.ParseContext) error {
 		return fmt.Errorf("failed to determine first host: %s", err)
 	}
 
+	cmd.logger.Printf("Writing MoltenCore managed systemd unit files")
+	u := []units.Unit{
+		units.DockerTLSSocket(conf.Docker),
+		units.Docker,
+	}
 	if isFirstHost {
 		u = append(u, units.BUCC)
 	}
@@ -49,6 +55,5 @@ func (cmd *InitCommand) run(c *kingpin.ParseContext) error {
 		return fmt.Errorf("failed to persist flannel subnets: %s", err)
 	}
 
-	// - write docker certs to disk
 	return nil
 }
