@@ -12,7 +12,7 @@ import (
 
 const (
 	dockerSSLDir          = "/var/ssl/docker"
-	boshDockerNetworkName = "bosh"
+	BoshDockerNetworkName = "bosh"
 )
 
 var (
@@ -23,9 +23,12 @@ var (
 				Name: "60-reset-flannel-default-bridge.conf",
 				Contents: []*unit.UnitOption{
 					unit.NewUnitOption("Service", "ExecStartPre",
-						"/bin/sh -c 'echo \"DOCKER_OPT_BIP=\\\\\"--bip=172.17.0.1/16\\\\\"\" > /run/flannel/flannel_docker_opts.env'"),
+						// 10.255.240.0/20 last network /20 from 10.0.0.0/8 range
+						// bridge only support 1000 hosts so no need for big network
+						// docker default 172.17.0.0/16 conflicts with virtual box (coreos-vagrant)
+						"/bin/sh -c 'echo \"DOCKER_OPT_BIP=\\\\\"--bip=10.255.240.0/20\\\\\"\" > /run/flannel/flannel_docker_opts.env'"),
 					unit.NewUnitOption("Service", "ExecStartPre",
-						"/bin/sh -c 'echo \"DOCKER_OPT_IPMASQ=\\\\\"--ip-masq=false\\\\\"\" >> /run/flannel/flannel_docker_opts.env'"),
+						"/bin/sh -c 'echo \"DOCKER_OPT_IPMASQ=\\\\\"--ip-masq=true\\\\\"\" >> /run/flannel/flannel_docker_opts.env'"),
 					unit.NewUnitOption("Service", "ExecStartPre",
 						"/bin/sh -c 'echo \"DOCKER_OPT_MTU=\\\\\"--mtu=1500\\\\\"\" >> /run/flannel/flannel_docker_opts.env'"),
 				},
@@ -44,7 +47,7 @@ var (
 					unit.NewUnitOption("Service", "EnvironmentFile", "/run/flannel/subnet.env"),
 					unit.NewUnitOption("Service", "ExecStartPost",
 						fmt.Sprintf("/bin/sh -c 'docker network create -d bridge --subnet=${FLANNEL_SUBNET} --attachable --opt com.docker.network.driver.mtu=${FLANNEL_MTU} %s || true'",
-							boshDockerNetworkName)),
+							BoshDockerNetworkName)),
 				},
 			},
 		},
