@@ -53,14 +53,15 @@ var (
 
 func DockerTLSSocket(conf config.Docker) Unit {
 	return Unit{
-		Name:   "docker-tls-tcp.socket",
-		Enable: true,
-		Contents: []*unit.UnitOption{
-			unit.NewUnitOption("Unit", "Description", "Docker Secured Socket for the API"),
-			unit.NewUnitOption("Socket", "ListenStream", conf.Endpoint),
-			unit.NewUnitOption("Socket", "FreeBind", "true"),
-			unit.NewUnitOption("Socket", "Service", "docker.service"),
-			unit.NewUnitOption("Install", "WantedBy", "sockets.target"),
+		Name: "docker.socket",
+		DropIns: []DropIn{
+			{
+				Name: "30-listen-stream.conf",
+				Contents: []*unit.UnitOption{
+					unit.NewUnitOption("Socket", "ListenStream", conf.Endpoint),
+					unit.NewUnitOption("Socket", "FreeBind", "true"),
+				},
+			},
 		},
 	}
 }
