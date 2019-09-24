@@ -19,10 +19,14 @@ var (
 		Name: "docker.service",
 		DropIns: []DropIn{
 			{
-				Name: "60-disable-flannel-default-bridge.conf",
+				Name: "60-reset-flannel-default-bridge.conf",
 				Contents: []*unit.UnitOption{
 					unit.NewUnitOption("Service", "ExecStartPre",
-						"/bin/sh -c 'echo \"\" > /run/flannel/flannel_docker_opts.env'"),
+						"/bin/sh -c 'echo \"DOCKER_OPT_BIP=\\\\\"--bip=172.17.0.1/16\\\\\"\" > /run/flannel/flannel_docker_opts.env'"),
+					unit.NewUnitOption("Service", "ExecStartPre",
+						"/bin/sh -c 'echo \"DOCKER_OPT_IPMASQ=\\\\\"--ip-masq=false\\\\\"\" >> /run/flannel/flannel_docker_opts.env'"),
+					unit.NewUnitOption("Service", "ExecStartPre",
+						"/bin/sh -c 'echo \"DOCKER_OPT_MTU=\\\\\"--mtu=1500\\\\\"\" >> /run/flannel/flannel_docker_opts.env'"),
 				},
 			},
 			{

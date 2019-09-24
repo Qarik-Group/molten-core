@@ -18,7 +18,7 @@ import (
 
 const (
 	EtcdMolenCorePath      string = "/moltencore/nodes"
-	DockerHostNetworkIndex        = 1
+	DockerHostNetworkIndex        = 2 // 1 is gateway
 	DockerCertValidFor            = time.Hour * 24 * 365
 	DockerTLSPort                 = 2376
 )
