@@ -14,6 +14,7 @@ var (
 			unit.NewUnitOption("Unit", "Requires", "docker.service"),
 
 			unit.NewUnitOption("Service", "Type", "oneshot"),
+			unit.NewUnitOption("Service", "EnvironmentFile", "/run/metadata/coreos"),
 			unit.NewUnitOption("Service", "ExecStart", "/opt/bin/mc bucc-up"),
 			unit.NewUnitOption("Service", "RemainAfterExit", "true"),
 			unit.NewUnitOption("Service", "StandardOutput", "journal"),
