@@ -54,6 +54,10 @@ func (s Subnet) IP(i uint8) (net.IP, error) {
 	return ip, nil
 }
 
+func (s Subnet) CIDR() string {
+	return s.cidr.String()
+}
+
 func (s Subnet) Equals(subnet Subnet) bool {
 	return s.cidr.String() == subnet.cidr.String()
 }

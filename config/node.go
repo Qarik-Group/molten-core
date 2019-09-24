@@ -30,17 +30,24 @@ type Docker struct {
 }
 
 type NodeConfig struct {
-	Subnet flannel.Subnet
-	Docker Docker
+	Subnet    flannel.Subnet
+	Docker    Docker
+	PrivateIP net.IP
+	PublicIP  net.IP
 }
 
 func LoadNodeConfig() (*NodeConfig, error) {
-	hostIP, err := util.LookupIpV4Address(false)
+	privateIP, err := util.LookupIpV4Address(false)
 	if err != nil {
-		return nil, fmt.Errorf("failed to lookup node address: %s", err)
+		return nil, fmt.Errorf("failed to lookup private node ip: %s", err)
 	}
 
-	subnets, err := flannel.GetSubnets(&hostIP)
+	publicIP, err := util.LookupIpV4Address(true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lookup public node ip: %s", err)
+	}
+
+	subnets, err := flannel.GetSubnets(&privateIP)
 	if err != nil || len(subnets) == 0 {
 		return nil, fmt.Errorf("failed to get flannel subnet: %s", err)
 	}
@@ -52,7 +59,7 @@ func LoadNodeConfig() (*NodeConfig, error) {
 	}
 
 	ctx := context.Background()
-	resp, err := kapi.Get(ctx, nodePath(subnet), nil)
+	resp, err := kapi.Get(ctx, nodePath(privateIP), nil)
 	if err != nil && !client.IsKeyNotFound(err) {
 		return nil, fmt.Errorf("failed to load node config from etcd: %s", err)
 	}
@@ -66,18 +73,19 @@ func LoadNodeConfig() (*NodeConfig, error) {
 		return &c, nil
 	}
 
-	docker, err := newDocker(subnet, hostIP)
+	docker, err := newDocker(subnet, privateIP)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate docker certs: %s", err)
 	}
 
-	conf := NodeConfig{Subnet: subnet, Docker: docker}
+	conf := NodeConfig{Subnet: subnet, Docker: docker,
+		PrivateIP: privateIP, PublicIP: publicIP}
 
 	rawConf, err := json.Marshal(conf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal node config: %s", err)
 	}
-	_, err = kapi.Set(ctx, nodePath(subnet), string(rawConf), nil)
+	_, err = kapi.Set(ctx, nodePath(privateIP), string(rawConf), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update node config in etcd: %s", err)
 	}
@@ -85,9 +93,8 @@ func LoadNodeConfig() (*NodeConfig, error) {
 	return &conf, nil
 }
 
-func nodePath(s flannel.Subnet) string {
-	key, _ := s.IP(1)
-	return filepath.Join(EtcdMolenCorePath, key.String())
+func nodePath(privateIP net.IP) string {
+	return filepath.Join(EtcdMolenCorePath, privateIP.String())
 }
 
 func newDocker(s flannel.Subnet, hostIP net.IP) (Docker, error) {
