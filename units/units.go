@@ -66,11 +66,18 @@ func Enable(units []Unit) error {
 				return fmt.Errorf("failed to link systemd dropin %s got: %s", d.Name, err)
 			}
 		}
+
+		if err = conn.Reload(); err != nil {
+			return fmt.Errorf("failed to reload systemd: %s", err)
+		}
+
+		_, err := conn.RestartUnit(u.Name, "replace", nil)
+		if err != nil {
+			return fmt.Errorf("failed to restart: %s got: %s", u.Name, err)
+		}
+
 	}
 
-	if err = conn.Reload(); err != nil {
-		return fmt.Errorf("failed to reload systemd: %s", err)
-	}
 	return nil
 }
 

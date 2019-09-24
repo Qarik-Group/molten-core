@@ -29,7 +29,7 @@ var (
 				Name: "20-clct-docker.conf",
 				Contents: []*unit.UnitOption{
 					unit.NewUnitOption("Service", "Environment",
-						fmt.Sprintf("DOCKER_OPTS=--tlsverify --tlscacert=%s/ca.pem --tlscert=%s/cert.pem --tlskey=%s/key.pem",
+						fmt.Sprintf("DOCKER_OPTS=\"--tlsverify --tlscacert=%s/ca.pem --tlscert=%s/cert.pem --tlskey=%s/key.pem\"",
 							dockerSSLDir, dockerSSLDir, dockerSSLDir)),
 				},
 			},
