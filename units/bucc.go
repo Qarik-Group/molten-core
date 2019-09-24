@@ -14,7 +14,11 @@ var (
 			unit.NewUnitOption("Unit", "Requires", "docker.service"),
 
 			unit.NewUnitOption("Service", "Type", "oneshot"),
-			unit.NewUnitOption("Service", "ExecStartPre", "mkdir -p /var/lib/bucc"),
+			unit.NewUnitOption("Service", "ExecStart", "/opt/bin/mc bucc-up"),
+			unit.NewUnitOption("Service", "RemainAfterExit", "true"),
+			unit.NewUnitOption("Service", "StandardOutput", "journal"),
+
+			unit.NewUnitOption("Install", "WantedBy", "multi-user.target"),
 		},
 	}
 )
