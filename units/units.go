@@ -38,6 +38,10 @@ func Enable(units []Unit) error {
 		return fmt.Errorf("failed to clear config dir: %s got: %s", mCConfigDir, err)
 	}
 
+	if err = removeStaleSymlinks(sytemdConfigDir); err != nil {
+		return fmt.Errorf("failed to remove stale symlinks in: %s got: %s", sytemdConfigDir, err)
+	}
+
 	for _, u := range units {
 		if len(u.Contents) != 0 {
 			path := unitPath(mCConfigDir, u)
@@ -100,4 +104,27 @@ func writeUnit(path string, u []*unit.UnitOption) error {
 	}
 
 	return ioutil.WriteFile(path, b, 0644)
+}
+
+func removeStaleSymlinks(dir string) error {
+	return filepath.Walk(dir,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.Mode()&os.ModeSymlink != 0 {
+				target, err := os.Readlink(path)
+				if err != nil {
+					return fmt.Errorf("failed resolve symlink: %s got %s", path, err)
+				}
+
+				if _, err := os.Stat(target); os.IsNotExist(err) {
+					if err := os.RemoveAll(path); err != nil {
+						return fmt.Errorf("failed to remove symlink: %s got %s", path, err)
+					}
+				}
+			}
+			return nil
+		},
+	)
 }

@@ -26,7 +26,7 @@ var (
 				},
 			},
 			{
-				Name: "20-clct-docker.conf",
+				Name: "30-enable-mtls.conf",
 				Contents: []*unit.UnitOption{
 					unit.NewUnitOption("Service", "Environment",
 						fmt.Sprintf("DOCKER_OPTS=\"--tlsverify --tlscacert=%s/ca.pem --tlscert=%s/cert.pem --tlskey=%s/key.pem\"",
