@@ -17,10 +17,9 @@ import (
 )
 
 const (
-	EtcdMolenCorePath      string = "/moltencore/nodes"
-	DockerHostNetworkIndex        = 2 // 1 is gateway
-	DockerCertValidFor            = time.Hour * 24 * 365
-	DockerTLSPort                 = 2376
+	EtcdMolenCorePath  string = "/moltencore/nodes"
+	DockerCertValidFor        = time.Hour * 24 * 365
+	DockerTLSPort             = 2376
 )
 
 type Docker struct {
@@ -36,12 +35,12 @@ type NodeConfig struct {
 }
 
 func LoadNodeConfig() (*NodeConfig, error) {
-	ip, err := util.LookupIpV4Address(false)
+	hostIP, err := util.LookupIpV4Address(false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to lookup node address: %s", err)
 	}
 
-	subnets, err := flannel.GetSubnets(&ip)
+	subnets, err := flannel.GetSubnets(&hostIP)
 	if err != nil || len(subnets) == 0 {
 		return nil, fmt.Errorf("failed to get flannel subnet: %s", err)
 	}
@@ -67,7 +66,7 @@ func LoadNodeConfig() (*NodeConfig, error) {
 		return &c, nil
 	}
 
-	docker, err := newDocker(subnet)
+	docker, err := newDocker(subnet, hostIP)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate docker certs: %s", err)
 	}
@@ -91,12 +90,7 @@ func nodePath(s flannel.Subnet) string {
 	return filepath.Join(EtcdMolenCorePath, key.String())
 }
 
-func newDocker(s flannel.Subnet) (Docker, error) {
-	endpoint, err := s.IP(DockerHostNetworkIndex)
-	if err != nil {
-		return Docker{}, fmt.Errorf("failed to reserve docker daemon flannel ip: %s", err)
-	}
-
+func newDocker(s flannel.Subnet, hostIP net.IP) (Docker, error) {
 	caCert, err := certs.Genereate(certs.GenArg{
 		ValidFor: DockerCertValidFor,
 	})
@@ -108,7 +102,7 @@ func newDocker(s flannel.Subnet) (Docker, error) {
 		CA:          caCert,
 		ValidFor:    DockerCertValidFor,
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		IPAddresses: []net.IP{endpoint, net.ParseIP("127.0.0.1")},
+		IPAddresses: []net.IP{hostIP, net.ParseIP("127.0.0.1")},
 	})
 	if err != nil {
 		return Docker{}, fmt.Errorf("failed to generate docker server cert: %s", err)
@@ -124,7 +118,7 @@ func newDocker(s flannel.Subnet) (Docker, error) {
 	}
 
 	return Docker{
-		Endpoint: fmt.Sprintf("%s:%d", endpoint, DockerTLSPort),
+		Endpoint: fmt.Sprintf("%s:%d", hostIP, DockerTLSPort),
 		CA:       caCert,
 		Server:   serverCert,
 		Client:   clientCert,
