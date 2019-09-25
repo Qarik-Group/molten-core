@@ -23,7 +23,8 @@ jobs:
         - path: cache
         run: {path: build}
     - put: mc-bucc-image
-      image: image/image.tar
+      params:
+        image: image/image.tar
 
 resources:
 - name: molten-core-bucc-dockerfile
