@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y build-essential zlibc zlib1g-dev \
     libreadline-dev libyaml-dev libsqlite3-dev sqlite3 jq curl \
     net-tools iputils-ping
 
-COPY --from=offline /bucc /bucc
+COPY --from=offline /bucc/bucc-build /bucc
 RUN cd bucc && ln -sf state/vars.yml && \
     echo "source <(/bucc/bin/bucc env)" >> ~/.bashrc
 
