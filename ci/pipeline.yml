@@ -1,0 +1,43 @@
+jobs:
+- name: build-mc-bucc-image
+  public: true
+  serial: true
+  plan:
+  - do:
+    - get: molten-core-bucc-dockerfile
+      trigger: true
+    - task: build
+      privileged: true
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source: {repository: vito/oci-build-task, tag: master}
+        params:
+          CONTEXT: molten-core-bucc-dockerfile/image
+        inputs:
+        - name: molten-core-bucc-dockerfile
+        outputs:
+        - name: image
+        caches:
+        - path: cache
+        run: {path: build}
+    - put: mc-bucc-image
+      image: image/image.tar
+
+resources:
+- name: molten-core-bucc-dockerfile
+  type: git
+  source:
+    branch: master
+    uri: git@github.com:starkandwayne/molten-core.git
+    private_key: ((github-private-key))
+    paths:
+    - image/Dockerfile
+
+- name: mc-bucc-image
+  type: registry-image
+  source:
+    username: ((dockerhub-username))
+    password: ((dockerhub-password))
+    repository: starkandwayne/mc-bucc
