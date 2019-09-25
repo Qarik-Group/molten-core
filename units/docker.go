@@ -26,7 +26,7 @@ var (
 						// 10.255.240.0/20 last network /20 from 10.0.0.0/8 range
 						// bridge only support 1000 hosts so no need for big network
 						// docker default 172.17.0.0/16 conflicts with virtual box (coreos-vagrant)
-						"/bin/sh -c 'echo \"DOCKER_OPT_BIP=\\\\\"--bip=10.255.240.0/20\\\\\"\" > /run/flannel/flannel_docker_opts.env'"),
+						"/bin/sh -c 'echo \"DOCKER_OPT_BIP=\\\\\"--bip=10.255.240.1/20\\\\\"\" > /run/flannel/flannel_docker_opts.env'"),
 					unit.NewUnitOption("Service", "ExecStartPre",
 						"/bin/sh -c 'echo \"DOCKER_OPT_IPMASQ=\\\\\"--ip-masq=true\\\\\"\" >> /run/flannel/flannel_docker_opts.env'"),
 					unit.NewUnitOption("Service", "ExecStartPre",
