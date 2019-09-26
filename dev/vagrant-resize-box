@@ -1,0 +1,18 @@
+#!/bin/bash -e
+
+tmpVDI=/tmp/cloned.vdi
+boxName=coreos-alpha
+resizeTo=25600
+
+diskUUID() {
+    VBoxManage list hdds | grep -B4 ${1} | grep -e '^UUID' | awk 'END {print $2}'
+}
+
+for vmdk in $(find ~/.vagrant.d/boxes/${boxName} | grep vmdk); do
+    VBoxManage clonemedium ${vmdk} ${tmpVDI} --format vdi
+    Vboxmanage closemedium disk $(diskUUID ${vmdk}) --delete
+    VBoxManage modifymedium ${tmpVDI} --resize ${resizeTo}
+    VBoxManage clonemedium ${tmpVDI} ${vmdk} --format vmdk
+    Vboxmanage closemedium disk $(diskUUID ${vmdk})
+    Vboxmanage closemedium disk $(diskUUID ${tmpVDI}) --delete
+done

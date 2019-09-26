@@ -1,0 +1,6 @@
+#!/bin/bash -e
+pushd ../coreos-vagrant
+
+vagrant destroy --parallel --force
+
+popd
