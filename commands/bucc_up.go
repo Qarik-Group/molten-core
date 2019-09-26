@@ -24,12 +24,13 @@ func (cmd *BuccUpCommand) run(c *kingpin.ParseContext) error {
 		return fmt.Errorf("failed load node config: %s", err)
 	}
 
-	if err = bucc.WriteStateDir(conf); err != nil {
-		return fmt.Errorf("failed to write state dir: %s", err)
+	bc, err := bucc.NewClient(cmd.logger, conf)
+	if err != nil {
+		return fmt.Errorf("failed create BUCC client: %s", err)
 	}
 
-	if err = bucc.Up(cmd.logger, conf); err != nil {
-		return fmt.Errorf("failed to create BUCC: %s", err)
+	if err = bc.Up(); err != nil {
+		return fmt.Errorf("failed to create BUCC container: %s", err)
 	}
 
 	// TODO store creds and state in etcd currently just in file
