@@ -2,8 +2,13 @@ package util
 
 import (
 	"errors"
+	"github.com/subosito/gotenv"
 	"net"
 	"os"
+)
+
+const (
+	metadataFile = "/run/metadata/coreos"
 )
 
 // From: https://github.com/coreos/container-linux-config-transpiler/blob/master/config/templating/templating.go
@@ -32,6 +37,7 @@ var (
 )
 
 func LookupIpV4Address(public bool) (net.IP, error) {
+	gotenv.Load(metadataFile)
 	var envNames []string = envNamesV4Private
 	if public {
 		envNames = envNamesV4Public

@@ -33,7 +33,6 @@ systemd:
 
       [Service]
       Type=oneshot
-      EnvironmentFile=/run/metadata/coreos
       ExecStart=/opt/bin/mc init
       RemainAfterExit=true
       StandardOutput=journal

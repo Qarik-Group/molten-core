@@ -44,6 +44,10 @@ func NewClient(l *log.Logger, conf *config.NodeConfig) (*Client, error) {
 }
 
 func (c *Client) Up() error {
+	if err := c.writeStateDir(); err != nil {
+		return err
+	}
+
 	return c.run([]string{
 		"/bucc/bin/bucc",
 		"up",
@@ -53,7 +57,11 @@ func (c *Client) Up() error {
 		"--flannel",
 		"--unix-sock",
 		"--concourse-lb",
-	})
+	}, false)
+}
+
+func (c *Client) Shell() error {
+	return c.run([]string{"/bin/bash"}, true)
 }
 
 func (c *Client) pullImage() error {
@@ -81,27 +89,24 @@ func (c *Client) writeStateDir() error {
 	return nil
 }
 
-func (c *Client) run(cmd []string) error {
+func (c *Client) run(entrypoint []string, tty bool) error {
 	if err := c.pullImage(); err != nil {
 		return err
 	}
 
-	if err := c.writeStateDir(); err != nil {
-		return err
-	}
-
-	//	initContainerIp, err := conf.Subnet.IP(2)
+	// TODO limit ip range to reserved range
 	networks := make(map[string]*network.EndpointSettings)
-	networks[units.BoshDockerNetworkName] = &network.EndpointSettings{
-		// IPAMConfig: &network.EndpointIPAMConfig{
-		// 	IPv4Address: initContainerIp.String(),
-		// },
-	}
+	networks[units.BoshDockerNetworkName] = &network.EndpointSettings{}
 
 	ctx := context.Background()
 	resp, err := c.dcli.ContainerCreate(ctx, &container.Config{
-		Image:      buccImage,
-		Entrypoint: cmd,
+		AttachStdin:  tty,
+		AttachStdout: tty,
+		AttachStderr: tty,
+		Tty:          tty,
+		OpenStdin:    tty,
+		Image:        buccImage,
+		Entrypoint:   entrypoint,
 	}, &container.HostConfig{
 		AutoRemove: true,
 		Mounts: []mount.Mount{
@@ -131,30 +136,45 @@ func (c *Client) run(cmd []string) error {
 		return fmt.Errorf("failed start docker container: %s", err)
 	}
 
-	statusCh, errCh := c.dcli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-
-	ctx, cancel := context.WithCancel(ctx)
-	go func() {
-		out, err := c.dcli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
-			ShowStdout: true, ShowStderr: true, Follow: true})
+	if tty {
+		session, err := c.dcli.ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
+			Stdin:  true,
+			Stdout: true,
+			Stderr: true,
+			Stream: true,
+		})
 		if err != nil {
-			c.logger.Printf("[warning] Failed to tail docker container logs: %s", err)
+			return fmt.Errorf("failed attach to docker container: %s", err)
 		}
 
-		stdcopy.StdCopy(os.Stdout, os.Stderr, out)
-	}()
+		stdcopy.StdCopy(os.Stdout, os.Stderr, session.Reader)
+	} else {
+		statusCh, errCh := c.dcli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 
-	select {
-	case err := <-errCh:
-		if err != nil {
+		ctx, cancel := context.WithCancel(ctx)
+		go func() {
+			out, err := c.dcli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
+				ShowStdout: true, ShowStderr: true, Follow: true})
+			if err != nil {
+				c.logger.Printf("[warning] Failed to tail docker container logs: %s", err)
+			}
+
+			stdcopy.StdCopy(os.Stdout, os.Stderr, out)
+		}()
+
+		select {
+		case err := <-errCh:
+			if err != nil {
+				cancel()
+				return fmt.Errorf("failed start docker container: %s", err)
+			}
+		case status := <-statusCh:
 			cancel()
-			return fmt.Errorf("failed start docker container: %s", err)
-		}
-	case status := <-statusCh:
-		cancel()
-		if status.StatusCode != 0 {
-			return fmt.Errorf("container process failed: %s", status.Error.Message)
+			if status.StatusCode != 0 {
+				return fmt.Errorf("container process failed: %s", status.Error.Message)
+			}
 		}
 	}
+
 	return nil
 }
