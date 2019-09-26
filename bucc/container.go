@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/docker/docker/api/types"
@@ -137,17 +138,40 @@ func (c *Client) run(entrypoint []string, tty bool) error {
 	}
 
 	if tty {
-		session, err := c.dcli.ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
-			Stdin:  true,
-			Stdout: true,
-			Stderr: true,
-			Stream: true,
-		})
-		if err != nil {
-			return fmt.Errorf("failed attach to docker container: %s", err)
-		}
+		// statusCh, errCh := c.dcli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 
-		stdcopy.StdCopy(os.Stdout, os.Stderr, session.Reader)
+		// resp, err := c.dcli.ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
+		// 	Stdin:  true,
+		// 	Stdout: true,
+		// 	//			Stderr: true,
+		// 	//			Stream: true,
+		// })
+		// if err != nil {
+		// 	return fmt.Errorf("failed attach to docker container: %s", err)
+		// }
+
+		// defer resp.Close()
+
+		// select {
+		// case err := <-errCh:
+		// 	if err != nil {
+		// 		return fmt.Errorf("failed start docker container: %s", err)
+		// 	}
+		// case status := <-statusCh:
+		// 	if status.StatusCode != 0 {
+		// 		return fmt.Errorf("container process failed: %s", status.Error.Message)
+		// 	}
+		// }
+
+		// stdcopy.StdCopy(os.Stdout, os.Stderr, session.Reader)
+
+		cmd := exec.Command("docker", "attach", resp.ID)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		err := cmd.Run()
+		if err != nil {
+			return err
+		}
 	} else {
 		statusCh, errCh := c.dcli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 
