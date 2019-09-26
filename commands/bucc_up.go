@@ -27,12 +27,14 @@ func (cmd *BuccUpCommand) run(c *kingpin.ParseContext) error {
 	if err = bucc.WriteStateDir(conf); err != nil {
 		return fmt.Errorf("failed to write state dir: %s", err)
 	}
-	bucc.CreateContainer()
-	// docker create container starkandwayne/mc-bucc
+
+	if err = bucc.Up(cmd.logger, conf); err != nil {
+		return fmt.Errorf("failed to create BUCC: %s", err)
+	}
+
+	// TODO store creds and state in etcd currently just in file
 	// load bucc creds from etcds
 	// bucc int to generate creds
 	// save creds and vars to etcd
-	// bucc up
-
 	return nil
 }

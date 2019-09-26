@@ -9,6 +9,10 @@ import (
 	"github.com/starkandwayne/molten-core/units"
 )
 
+const (
+	dockerSocket = "/run/docker.sock"
+)
+
 type Vars struct {
 	DirectorName    string `json:"director_name"`
 	DockerHost      string `json:"docker_host"`
@@ -32,7 +36,7 @@ func writeVars(path string, c *config.NodeConfig) error {
 
 	vars := Vars{
 		DirectorName:    "bucc",
-		DockerHost:      "/run/docker.sock",
+		DockerHost:      dockerSocket,
 		Network:         units.BoshDockerNetworkName,
 		InternalCIDR:    c.Subnet.CIDR(),
 		InternalGW:      gw.String(),

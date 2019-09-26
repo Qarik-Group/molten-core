@@ -3,7 +3,9 @@ module github.com/starkandwayne/molten-core
 go 1.13
 
 require (
+	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
+	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/coreos/bbolt v1.3.3 // indirect
@@ -20,7 +22,9 @@ require (
 	github.com/gogo/protobuf v1.3.0 // indirect
 	github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6 // indirect
 	github.com/google/btree v1.0.0 // indirect
+	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/google/uuid v1.1.1 // indirect
+	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
@@ -44,6 +48,7 @@ require (
 	google.golang.org/genproto v0.0.0-20190916214212-f660b8655731 // indirect
 	google.golang.org/grpc v1.23.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
+	gotest.tools v2.2.0+incompatible // indirect
 	sigs.k8s.io/yaml v1.1.0 // indirect
 )
 

@@ -71,15 +71,18 @@ func Enable(units []Unit) error {
 			}
 		}
 
-		if err = conn.Reload(); err != nil {
-			return fmt.Errorf("failed to reload systemd: %s", err)
-		}
+	}
 
-		_, err := conn.RestartUnit(u.Name, "replace", nil)
+	if err = conn.Reload(); err != nil {
+		return fmt.Errorf("failed to reload systemd: %s", err)
+	}
+
+	for _, u := range units {
+		// TODO only reloadOrRestart when config has changed
+		_, err := conn.ReloadOrRestartUnit(u.Name, "replace", nil)
 		if err != nil {
 			return fmt.Errorf("failed to restart: %s got: %s", u.Name, err)
 		}
-
 	}
 
 	return nil
