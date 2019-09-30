@@ -11,8 +11,7 @@ import (
 )
 
 const (
-	dockerSSLDir          = "/var/ssl/docker"
-	BoshDockerNetworkName = "bosh"
+	dockerSSLDir = "/var/ssl/docker"
 )
 
 var (
@@ -47,7 +46,7 @@ var (
 					unit.NewUnitOption("Service", "EnvironmentFile", "/run/flannel/subnet.env"),
 					unit.NewUnitOption("Service", "ExecStartPost",
 						fmt.Sprintf("/bin/sh -c 'docker network create -d bridge --subnet=${FLANNEL_SUBNET} --attachable --opt com.docker.network.driver.mtu=${FLANNEL_MTU} %s || true'",
-							BoshDockerNetworkName)),
+							config.BOSHDockerNetworkName)),
 				},
 			},
 		},

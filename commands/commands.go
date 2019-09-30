@@ -15,6 +15,7 @@ func Configure(logger *log.Logger, app *kingpin.Application) {
 	cmds := []register{
 		&InitCommand{logger: logger},
 		&BuccUpCommand{logger: logger},
+		&UpdateBoshConfigsCommand{logger: logger},
 		&ShellCommand{logger: logger},
 	}
 

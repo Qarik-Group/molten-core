@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 
 	"github.com/starkandwayne/molten-core/config"
-	"github.com/starkandwayne/molten-core/units"
 )
 
 const (
@@ -37,7 +36,7 @@ func writeVars(path string, c *config.NodeConfig) error {
 	vars := Vars{
 		DirectorName:    "bucc",
 		DockerHost:      dockerSocket,
-		Network:         units.BoshDockerNetworkName,
+		Network:         config.BOSHDockerNetworkName,
 		InternalCIDR:    c.Subnet.CIDR(),
 		InternalGW:      gw.String(),
 		InternalIP:      buccIP.String(),

@@ -31,17 +31,12 @@ func (cmd *InitCommand) run(c *kingpin.ParseContext) error {
 		return fmt.Errorf("failed to write docker certs: %s", err)
 	}
 
-	isFirstHost, err := flannel.IsFirstSubnet(conf.Subnet)
-	if err != nil {
-		return fmt.Errorf("failed to determine first host: %s", err)
-	}
-
 	cmd.logger.Printf("Writing MoltenCore managed systemd unit files")
 	u := []units.Unit{
 		units.DockerTLSSocket(conf.Docker),
 		units.Docker,
 	}
-	if isFirstHost {
+	if conf.IsSingletonZone() {
 		u = append(u, units.BUCC)
 	}
 

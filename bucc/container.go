@@ -18,7 +18,6 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 
 	"github.com/starkandwayne/molten-core/config"
-	"github.com/starkandwayne/molten-core/units"
 )
 
 const (
@@ -65,6 +64,31 @@ func (c *Client) Shell() error {
 	return c.run([]string{"/bin/bash"}, true)
 }
 
+func (c *Client) UpdateCloudConfig(confs *[]config.NodeConfig) error {
+	data, err := renderCloudConfig(confs)
+	if err != nil {
+		return fmt.Errorf("failed to render Cloud Config: %s", err)
+	}
+	return c.updateConfig("cloud", data)
+}
+
+func (c *Client) UpdateCPIConfig(confs *[]config.NodeConfig) error {
+	data, err := renderCPIConfig(confs)
+	if err != nil {
+		return fmt.Errorf("failed to render CPI Config: %s", err)
+	}
+	return c.updateConfig("cpi", data)
+}
+
+func (c *Client) UpdateRuntimeConfig(confs *[]config.NodeConfig) error {
+	return c.updateConfig("runtime", renderRuntimeConfig())
+}
+
+func (c *Client) updateConfig(t, config string) error {
+	cmd := fmt.Sprintf("source <(/bucc/bin/bucc env) && bosh -n update-config --type %s --name=mc <(echo '%s')", t, config)
+	return c.run([]string{"/bin/bash", "-c", cmd}, false)
+}
+
 func (c *Client) pullImage() error {
 	ctx := context.Background()
 	c.logger.Printf("Pulling %s docker image, this can take a while", buccImage)
@@ -97,7 +121,7 @@ func (c *Client) run(entrypoint []string, tty bool) error {
 
 	// TODO limit ip range to reserved range
 	networks := make(map[string]*network.EndpointSettings)
-	networks[units.BoshDockerNetworkName] = &network.EndpointSettings{}
+	networks[config.BOSHDockerNetworkName] = &network.EndpointSettings{}
 
 	ctx := context.Background()
 	resp, err := c.dcli.ContainerCreate(ctx, &container.Config{
@@ -195,7 +219,7 @@ func (c *Client) run(entrypoint []string, tty bool) error {
 		case status := <-statusCh:
 			cancel()
 			if status.StatusCode != 0 {
-				return fmt.Errorf("container process failed: %s", status.Error.Message)
+				return fmt.Errorf("container process failed: %s", status.Error)
 			}
 		}
 	}
