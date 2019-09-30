@@ -9,15 +9,15 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
-type UpdateBoshConfigsCommand struct {
+type UpdateBUCCConfigsCommand struct {
 	logger *log.Logger
 }
 
-func (cmd *UpdateBoshConfigsCommand) register(app *kingpin.Application) {
-	app.Command("update-bosh-configs", "update {cloud,cpi,runtime}-configs in BOSH").Action(cmd.run)
+func (cmd *UpdateBUCCConfigsCommand) register(app *kingpin.Application) {
+	app.Command("update-bucc-configs", "update configs in BOSH and Credhub ").Action(cmd.run)
 }
 
-func (cmd *UpdateBoshConfigsCommand) run(c *kingpin.ParseContext) error {
+func (cmd *UpdateBUCCConfigsCommand) run(c *kingpin.ParseContext) error {
 	cmd.logger.Printf("Loading node config")
 	conf, err := config.LoadNodeConfig()
 	if err != nil {
@@ -40,16 +40,24 @@ func (cmd *UpdateBoshConfigsCommand) run(c *kingpin.ParseContext) error {
 		return fmt.Errorf("failed create BUCC client: %s", err)
 	}
 
+	cmd.logger.Printf("Updating BOSH Cloud Config")
 	if err = bc.UpdateCloudConfig(confs); err != nil {
-		return fmt.Errorf("failed to update BUCC Cloud Config: %s", err)
+		return fmt.Errorf("failed to update BOSH Cloud Config: %s", err)
 	}
 
+	cmd.logger.Printf("Updating BOSH CPI Config")
 	if err = bc.UpdateCPIConfig(confs); err != nil {
-		return fmt.Errorf("failed to update BUCC CPI Config: %s", err)
+		return fmt.Errorf("failed to update BOSH CPI Config: %s", err)
 	}
 
+	cmd.logger.Printf("Updating BOSH Runtime Config")
 	if err = bc.UpdateRuntimeConfig(confs); err != nil {
-		return fmt.Errorf("failed to update BUCC Runtime Config: %s", err)
+		return fmt.Errorf("failed to update BOSH Runtime Config: %s", err)
+	}
+
+	cmd.logger.Printf("Updating Credhub MoltenCore Config (for consumption via Concourse)")
+	if err = bc.UpdateMoltenCoreConfig(confs); err != nil {
+		return fmt.Errorf("failed to update Credhub MoltenCore Config: %s", err)
 	}
 
 	return nil

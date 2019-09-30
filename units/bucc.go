@@ -22,7 +22,7 @@ var (
 		},
 	},
 		{
-			Name: "bosh-configs.service",
+			Name: "bucc-configs.service",
 			Contents: []*unit.UnitOption{
 				unit.NewUnitOption("Unit", "Description", "Updates BOSH {cloud,cpi,runtime}-configs"),
 				unit.NewUnitOption("Unit", "After", "bucc.service"),
@@ -30,7 +30,7 @@ var (
 				unit.NewUnitOption("Unit", "Requires", "bucc.service"),
 
 				unit.NewUnitOption("Service", "Type", "oneshot"),
-				unit.NewUnitOption("Service", "ExecStart", "/opt/bin/mc update-bosh-configs"),
+				unit.NewUnitOption("Service", "ExecStart", "/opt/bin/mc update-bucc-configs"),
 				unit.NewUnitOption("Service", "RemainAfterExit", "true"),
 				unit.NewUnitOption("Service", "StandardOutput", "journal"),
 

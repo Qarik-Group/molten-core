@@ -43,7 +43,7 @@ func (nc NodeConfig) IsSingletonZone() bool {
 }
 
 func (nc NodeConfig) Zone() string {
-	return fmt.Sprintf("z%d", nc.ZoneIndex)
+	return fmt.Sprintf("z%d", *nc.ZoneIndex)
 }
 
 func (nc NodeConfig) CPIName() string {

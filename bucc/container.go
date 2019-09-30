@@ -24,6 +24,7 @@ const (
 	buccImage             = "starkandwayne/mc-bucc"
 	buccHostStateDir      = "/var/lib/moltencore/bucc"
 	buccContainerStateDir = "/bucc/state"
+	credhubMoltenCorePath = "/concourse/main/moltencore"
 )
 
 type Client struct {
@@ -69,7 +70,7 @@ func (c *Client) UpdateCloudConfig(confs *[]config.NodeConfig) error {
 	if err != nil {
 		return fmt.Errorf("failed to render Cloud Config: %s", err)
 	}
-	return c.updateConfig("cloud", data)
+	return c.updateBoshConfig("cloud", data)
 }
 
 func (c *Client) UpdateCPIConfig(confs *[]config.NodeConfig) error {
@@ -77,15 +78,28 @@ func (c *Client) UpdateCPIConfig(confs *[]config.NodeConfig) error {
 	if err != nil {
 		return fmt.Errorf("failed to render CPI Config: %s", err)
 	}
-	return c.updateConfig("cpi", data)
+	return c.updateBoshConfig("cpi", data)
 }
 
 func (c *Client) UpdateRuntimeConfig(confs *[]config.NodeConfig) error {
-	return c.updateConfig("runtime", renderRuntimeConfig())
+	return c.updateBoshConfig("runtime", renderRuntimeConfig())
 }
 
-func (c *Client) updateConfig(t, config string) error {
+func (c *Client) UpdateMoltenCoreConfig(confs *[]config.NodeConfig) error {
+	data, err := renderMoltenCoreConfig(confs)
+	if err != nil {
+		return fmt.Errorf("failed to render MoltenCore Config: %s", err)
+	}
+	return c.credHubSet(credhubMoltenCorePath, data)
+}
+
+func (c *Client) updateBoshConfig(t, config string) error {
 	cmd := fmt.Sprintf("source <(/bucc/bin/bucc env) && bosh -n update-config --type %s --name=mc <(echo '%s')", t, config)
+	return c.run([]string{"/bin/bash", "-c", cmd}, false)
+}
+
+func (c *Client) credHubSet(path, config string) error {
+	cmd := fmt.Sprintf("source <(/bucc/bin/bucc env) && credhub set -n %s -t json -v '%s'", path, config)
 	return c.run([]string{"/bin/bash", "-c", cmd}, false)
 }
 

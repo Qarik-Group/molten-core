@@ -14,8 +14,8 @@ type register interface {
 func Configure(logger *log.Logger, app *kingpin.Application) {
 	cmds := []register{
 		&InitCommand{logger: logger},
-		&BuccUpCommand{logger: logger},
-		&UpdateBoshConfigsCommand{logger: logger},
+		&BUCCUpCommand{logger: logger},
+		&UpdateBUCCConfigsCommand{logger: logger},
 		&ShellCommand{logger: logger},
 	}
 

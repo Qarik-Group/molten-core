@@ -19,9 +19,9 @@ type dockerProperties struct {
 }
 
 type dockerTLS struct {
-	CA          []byte `json:"ca"`
-	Certificate []byte `json:"certificate"`
-	PrivateKey  []byte `json:"private_key"`
+	CA          string `json:"ca"`
+	Certificate string `json:"certificate"`
+	PrivateKey  string `json:"private_key"`
 }
 
 func renderCPIConfig(confs *[]config.NodeConfig) (string, error) {
@@ -36,9 +36,9 @@ func renderCPIConfig(confs *[]config.NodeConfig) (string, error) {
 			Properties: dockerProperties{
 				Host: endpoint,
 				TLS: dockerTLS{
-					CA:          conf.Docker.CA.Cert,
-					Certificate: conf.Docker.Client.Cert,
-					PrivateKey:  conf.Docker.Client.Key,
+					CA:          string(conf.Docker.CA.Cert),
+					Certificate: string(conf.Docker.Client.Cert),
+					PrivateKey:  string(conf.Docker.Client.Key),
 				},
 			},
 		})
