@@ -37,7 +37,7 @@ func (cmd *InitCommand) run(c *kingpin.ParseContext) error {
 		units.Docker,
 	}
 	if conf.IsSingletonZone() {
-		u = append(u, units.BUCC)
+		u = append(u, units.BUCC...)
 	}
 
 	err = units.Enable(u)

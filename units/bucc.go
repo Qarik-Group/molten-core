@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	BUCC Unit = Unit{
+	BUCC []Unit = []Unit{{
 		Name: "bucc.service",
 		Contents: []*unit.UnitOption{
 			unit.NewUnitOption("Unit", "Description", "BUCC - BOSH UAA Credhub and Concourse"),
@@ -19,6 +19,23 @@ var (
 			unit.NewUnitOption("Service", "StandardOutput", "journal"),
 
 			unit.NewUnitOption("Install", "WantedBy", "multi-user.target"),
+		},
+	},
+		{
+			Name: "bosh-configs.service",
+			Contents: []*unit.UnitOption{
+				unit.NewUnitOption("Unit", "Description", "Updates BOSH {cloud,cpi,runtime}-configs"),
+				unit.NewUnitOption("Unit", "After", "bucc.service"),
+				unit.NewUnitOption("Unit", "Wants", "bucc.service"),
+				unit.NewUnitOption("Unit", "Requires", "bucc.service"),
+
+				unit.NewUnitOption("Service", "Type", "oneshot"),
+				unit.NewUnitOption("Service", "ExecStart", "/opt/bin/mc update-bosh-configs"),
+				unit.NewUnitOption("Service", "RemainAfterExit", "true"),
+				unit.NewUnitOption("Service", "StandardOutput", "journal"),
+
+				unit.NewUnitOption("Install", "WantedBy", "multi-user.target"),
+			},
 		},
 	}
 )
