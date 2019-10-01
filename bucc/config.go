@@ -40,7 +40,7 @@ func writeVars(path string, c *config.NodeConfig) error {
 		InternalCIDR:    c.Subnet.CIDR(),
 		InternalGW:      gw.String(),
 		InternalIP:      buccIP.String(),
-		HostIP:          c.PublicIP.String(),
+		HostIP:          "0.0.0.0",
 		ConcourseDomain: c.PublicIP.String(),
 	}
 
