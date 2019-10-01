@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo "fly -t bucc set-pipeline -p deploy-cf -c <(echo '$(spruce json examples/deploy-cloudfoundry.yml)')" | pbcopy

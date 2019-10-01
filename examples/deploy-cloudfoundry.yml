@@ -1,0 +1,44 @@
+jobs:
+- name: deploy-cf
+  plan:
+  - in_parallel:
+    - get: cf-deployment
+      trigger: true
+    - get: stemcell
+  - put: deploy
+    params:
+      manifest: cf-deployment/cf-deployment.yml
+      stemcells: [ stemcell/stemcell.tgz ]
+      ops_files:
+      - cf-deployment/operations/use-compiled-releases.yml
+      - cf-deployment/operations/use-latest-stemcell.yml
+      vars:
+        system_domain: ((moltencore.public_ips.0)).xip.io
+resources:
+- name: cf-deployment
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/cf-deployment.git
+    branch: master
+    tag_filter: v*
+
+- name: deploy
+  type: bosh-deployment
+  source:
+    deployment: cf
+    target: ((bosh_environment))
+    client: ((bosh_client))
+    client_id: ((bosh_client))
+    client_secret: ((bosh_client_secret))
+    ca_cert: ((bosh_ca_cert))
+
+- name: stemcell
+  type: bosh-io-stemcell
+  source: { name: ((bosh_stemcell)) }
+
+resource_types:
+- name: bosh-deployment
+  type: docker-image
+  source:
+    repository: cloudfoundry/bosh-deployment-resource
+    tag: latest
