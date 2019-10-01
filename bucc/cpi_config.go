@@ -7,15 +7,15 @@ import (
 )
 
 type cpi struct {
-	Name       string `json:"name"`
-	Type       string `json:"type"`
-	Properties dockerProperties
+	Name       string           `json:"name"`
+	Type       string           `json:"type"`
+	Properties dockerProperties `json:"properties"`
 }
 
 type dockerProperties struct {
-	Host    string    `json:"host"`
-	Gateway string    `json:"gateway"`
-	TLS     dockerTLS `json:"tls"`
+	Host       string    `json:"host"`
+	APIVersion string    `json:"api_version"`
+	TLS        dockerTLS `json:"tls"`
 }
 
 type dockerTLS struct {
@@ -34,7 +34,8 @@ func renderCPIConfig(confs *[]config.NodeConfig) (string, error) {
 			Name: conf.CPIName(),
 			Type: "docker",
 			Properties: dockerProperties{
-				Host: endpoint,
+				Host:       endpoint,
+				APIVersion: "1.38",
 				TLS: dockerTLS{
 					CA:          string(conf.Docker.CA.Cert),
 					Certificate: string(conf.Docker.Client.Cert),
