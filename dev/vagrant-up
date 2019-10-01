@@ -1,8 +1,9 @@
 #!/bin/bash -e
 
-ct -in-file container-linux-config.yaml \
-   -out-file ../coreos-vagrant/config.ign \
-   -platform vagrant-virtualbox -pretty -strict
+ct -out-file ../coreos-vagrant/config.ign \
+   -platform vagrant-virtualbox -pretty -strict \
+   -in-file <(bosh int container-linux-config.yaml \
+                   -o <(echo '[{"type":"replace","path":"/flannel/interface?","value":"eth1"}]'))
 
 pushd ../coreos-vagrant
 cat <<EOF > config.rb
