@@ -1,0 +1,20 @@
+#!/bin/bash
+
+file=""
+name=""
+case ${1} in
+    cf|cloudfoundry)
+        name=cf
+        file=cloudfoundry
+        ;;
+    k8s|kubernetes)
+        name=k8s
+        file=kubernetes
+        ;;
+    *)
+        echo "usage: ./dev/copy-pipeline cf|k8s"
+        exit 1
+        ;;
+esac
+
+echo "fly -t bucc set-pipeline -p deploy-${name} -c <(echo '$(spruce json examples/deploy-${file}.yml)')" | pbcopy

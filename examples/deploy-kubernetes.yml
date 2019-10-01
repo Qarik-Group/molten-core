@@ -1,0 +1,65 @@
+jobs:
+- name: deploy-k8s
+  plan:
+  - in_parallel:
+    - get: kubo-deployment
+      trigger: true
+    - get: stemcell
+    - get: opsfile
+  - put: deploy
+    params:
+      manifest: kubo-deployment/manifests/cfcr.yml
+      stemcells: [ stemcell/stemcell.tgz ]
+      ops_files:
+      - opsfile/opsfile.yml
+      vars:
+#        system_domain: ((moltencore.public_ips.0)).xip.io
+resources:
+- name: opsfile
+  type: file
+  source:
+    filename: opsfile.yml
+    content:
+      - type: replace
+        path: /instance_groups/name=master/azs
+        value: ((moltencore.azs))
+      - type: replace
+        path: /instance_groups/name=worker/azs
+        value: ((moltencore.azs))
+      - type: replace
+        path: /instance_groups/name=apply-addons/azs
+        value: [ ((moltencore.az_singleton)) ]
+
+- name: kubo-deployment
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry-incubator/kubo-deployment
+    branch: master
+    tag_filter: v*
+
+- name: deploy
+  type: bosh-deployment
+  source:
+    deployment: cfcr
+    target: ((bosh_environment))
+    client: ((bosh_client))
+    client_id: ((bosh_client))
+    client_secret: ((bosh_client_secret))
+    ca_cert: ((bosh_ca_cert))
+
+- name: stemcell
+  type: bosh-io-stemcell
+  source: { name: ((bosh_stemcell)) }
+
+resource_types:
+- name: bosh-deployment
+  type: docker-image
+  source:
+    repository: cloudfoundry/bosh-deployment-resource
+    tag: latest
+
+- name: file
+  type: docker-image
+  source:
+    repository: aequitas/concourse-file-resource
+    tag: latest
