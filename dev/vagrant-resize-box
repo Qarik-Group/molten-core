@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 tmpVDI=/tmp/cloned.vdi
-boxName=coreos-alpha
+boxName=coreos-stable
 resizeTo=25600
 
 diskUUID() {
