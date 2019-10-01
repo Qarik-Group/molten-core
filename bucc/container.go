@@ -94,7 +94,7 @@ func (c *Client) UpdateMoltenCoreConfig(confs *[]config.NodeConfig) error {
 }
 
 func (c *Client) updateBoshConfig(t, config string) error {
-	cmd := fmt.Sprintf("source <(/bucc/bin/bucc env) && bosh -n update-config --type %s --name=mc <(echo '%s')", t, config)
+	cmd := fmt.Sprintf("source <(/bucc/bin/bucc env) && bosh -n update-%s-config <(echo '%s')", t, config)
 	return c.run([]string{"/bin/bash", "-c", cmd}, false)
 }
 
