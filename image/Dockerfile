@@ -13,7 +13,7 @@ RUN mkdir -p /bucc && tar -xf /tmp/offline/bucc-*.tar.gz -C /bucc
 FROM ubuntu:bionic
 RUN apt-get update && apt-get install -y build-essential zlibc zlib1g-dev \
     ruby ruby-dev openssl libxslt1-dev libxml2-dev libssl-dev libreadline7 \
-    libreadline-dev libyaml-dev libsqlite3-dev sqlite3 jq curl \
+    libreadline-dev libyaml-dev libsqlite3-dev sqlite3 jq curl ssh \
     net-tools iputils-ping
 
 COPY --from=offline /bucc/bucc-build /bucc
