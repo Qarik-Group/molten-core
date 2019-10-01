@@ -14,6 +14,7 @@ const (
 
 type Vars struct {
 	DirectorName    string `json:"director_name"`
+	Alias           string `json:"alias"`
 	DockerHost      string `json:"docker_host"`
 	Network         string `json:"network"`
 	InternalCIDR    string `json:"internal_cidr"`
@@ -34,7 +35,8 @@ func writeVars(path string, c *config.NodeConfig) error {
 	}
 
 	vars := Vars{
-		DirectorName:    "bucc",
+		DirectorName:    "molten-core",
+		Alias:           "mc",
 		DockerHost:      dockerSocket,
 		Network:         config.BOSHDockerNetworkName,
 		InternalCIDR:    c.Subnet.CIDR(),

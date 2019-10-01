@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	buccImage             = "starkandwayne/mc-bucc"
+	buccImage             = "starkandwayne/mc-bucc:latest"
 	buccHostStateDir      = "/var/lib/moltencore/bucc"
 	buccContainerStateDir = "/bucc/state"
 	credhubMoltenCorePath = "/concourse/main/moltencore"
@@ -62,7 +62,8 @@ func (c *Client) Up() error {
 }
 
 func (c *Client) Shell() error {
-	return c.run([]string{"/bin/bash"}, true)
+	return c.run([]string{"/bin/bash", "-c",
+		"/bin/bash --init-file <(echo 'source ~/.bashrc && bucc fly >/dev/null && bucc info')"}, true)
 }
 
 func (c *Client) UpdateCloudConfig(confs *[]config.NodeConfig) error {
@@ -105,7 +106,19 @@ func (c *Client) credHubSet(path, config string) error {
 
 func (c *Client) pullImage() error {
 	ctx := context.Background()
-	c.logger.Printf("Pulling %s docker image, this can take a while", buccImage)
+	images, err := c.dcli.ImageList(ctx, types.ImageListOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to list images: %s", buccImage, err)
+	}
+	for _, img := range images {
+		for _, tag := range img.RepoTags {
+			if tag == buccImage {
+				return nil
+			}
+		}
+	}
+
+	c.logger.Printf("Pulling MoltenCore docker image, this can take a while")
 	reader, err := c.dcli.ImagePull(ctx, buccImage, types.ImagePullOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to pull image %s: %s", buccImage, err)
