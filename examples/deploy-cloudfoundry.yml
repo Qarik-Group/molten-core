@@ -5,6 +5,7 @@ jobs:
     - get: cf-deployment
       trigger: true
     - get: stemcell
+    - get: opsfile
   - put: deploy
     params:
       manifest: cf-deployment/cf-deployment.yml
@@ -12,9 +13,33 @@ jobs:
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
       - cf-deployment/operations/use-latest-stemcell.yml
+      - cf-deployment/operations/scale-to-one-az.yml
+      - opsfile/opsfile.yml
       vars:
         system_domain: ((moltencore.public_ips.0)).xip.io
 resources:
+- name: opsfile
+  type: file
+  source:
+    filename: opsfile.yml
+    content:
+      # Docker garden compatibility
+      - type: replace
+        path: /instance_groups/name=diego-cell/jobs/name=garden/properties/garden/apparmor_profile?
+        value: ""
+      - type: replace
+        path: /instance_groups/name=diego-cell/jobs/name=rep/properties?/set_kernel_parameters
+        value: false
+      - type: replace
+        path: /instance_groups/name=diego-api/jobs/name=bbs/properties?/set_kernel_parameters
+        value: false
+      - type: replace
+        path: /instance_groups/name=api/jobs/name=file_server/properties?/set_kernel_parameters
+        value: false
+      - type: replace
+        path: /instance_groups/name=diego-api/jobs/name=locket/properties?/set_kernel_parameters
+        value: false
+
 - name: cf-deployment
   type: git
   source:
@@ -41,4 +66,10 @@ resource_types:
   type: docker-image
   source:
     repository: cloudfoundry/bosh-deployment-resource
+    tag: latest
+
+- name: file
+  type: docker-image
+  source:
+    repository: aequitas/concourse-file-resource
     tag: latest
