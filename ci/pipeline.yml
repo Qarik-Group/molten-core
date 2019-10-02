@@ -1,4 +1,25 @@
 jobs:
+- name: unit-test
+  public: true
+  serial: true
+  plan:
+  - do:
+    - get: molten-core-src
+      trigger: true
+    - task: test
+      privileged: true
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source: {repository: starkandwayne/concourse-go, tag: 1.13}
+        inputs:
+        - name: molten-core-src
+          path: .
+        run:
+          path: /bin/bash
+          args: [ "-c", "go get github.com/onsi/ginkgo/ginkgo && ginkgo ./..." ]
+
 - name: build-mc-bucc-image
   public: true
   serial: true
@@ -26,7 +47,103 @@ jobs:
       params:
         image: image/image.tar
 
+- name: release
+  public: true
+  serial: true
+  plan:
+  - do:
+    - get: molten-core-src
+      trigger: true
+      passed: [ unit-test ]
+    - get: version
+    - task: build-binary
+      privileged: true
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source: {repository: starkandwayne/concourse-go, tag: 1.13}
+        inputs:
+        - name: molten-core-src
+          path: .
+        outputs:
+        - name: bin
+        run:
+          path: /bin/bash
+          args: [ "-c", "go build -o bin/mc main.go && shasum -a 512 bin/mc | cut -d' ' -f1 > bin/sha" ]
+    - task: generate-config
+      privileged: true
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source: {repository: starkandwayne/concourse, tag: latest}
+        inputs:
+        - name: bin
+        - name: version
+        - name: molten-core-src
+          path: repo
+        outputs:
+        - name: repo
+        run:
+          path: /bin/bash
+          args:
+          - -c
+          - |
+            pushd repo
+            bosh int container-linux-config.yaml -o ci/clc-mc-file.yml \
+                 -v=mc_url=https://github.com/starkandwayne/molten-core/releases/download/v$(cat version/number)/mc \
+                 -v=mc_sha512=$(cat bin/sha) > container-linux-config.yaml.tmp
+            mv container-linux-config.yaml{.tmp,}
+            git config --global user.email "ci@starkandwayne.com"
+            git config --global user.name "CI Bot"
+            git add -A && git commit -m "Release: $(cat version/number)"
+    - put: molten-core-src
+      params:
+        repository: repo
+    - put: github-release
+      params:
+        name:       version/number
+        tag:        version/number
+        tag_prefix: v
+        globs:
+        - bin/mc
+        - molten-core-src/container-linux-config.yaml
+
+- name: minor
+  public: true
+  plan:
+    - do:
+      - { get: version, trigger: false, params: {bump: minor} }
+      - { put: version,                 params: {file: version/number} }
+
+- name: major
+  public: true
+  plan:
+    - do:
+      - { get: version, trigger: false, params: {bump: major} }
+      - { put: version,                 params: {file: version/number} }
+
 resources:
+- name: github-release
+  type: github-release
+  source:
+    owner: starkandwayne
+    repository: molten-core
+    access_token: ((github-access-token))
+
+- name: molten-core-src
+  type: git
+  source:
+    branch: master
+    uri: git@github.com:starkandwayne/molten-core.git
+    private_key: ((github-private-key))
+    paths:
+    - go.mod
+    - go.sum
+    - '*.go'
+    - '*/*.go'
+
 - name: molten-core-bucc-dockerfile
   type: git
   source:
@@ -42,3 +159,13 @@ resources:
     username: ((dockerhub-username))
     password: ((dockerhub-password))
     repository: starkandwayne/mc-bucc
+
+- name: version
+  type: semver
+  source:
+    driver: git
+    uri: git@github.com:starkandwayne/molten-core.git
+    private_key: ((github-private-key))
+    branch: version
+    file: number
+    initial_version: 0.0.1

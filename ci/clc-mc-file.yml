@@ -1,0 +1,7 @@
+- type: replace
+  path: /storage/files/filesystem=root/contents/remote/url
+  value: ((mc_url))
+
+- type: replace
+  path: /storage/files/filesystem=root/contents/remote/verification/hash/sum
+  value: ((mc_sha512))

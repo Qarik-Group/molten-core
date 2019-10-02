@@ -7,23 +7,21 @@ etcd:
   discovery:                   "https://discovery.etcd.io/<token>"
 
 flannel:
-  # linux-container-config-transpiler only support up to 0.7.0
-  # most recent in stable is 0.11.0
-  # 0.7.0 does not work with docker version of stable (no inter node traffic possible)
-  # leave flannel version floating for now
-  # version: 0.7.0
   network_config: '{"Network": "10.1.0.0/16"}'
   public_ip: "{PRIVATE_IPV4}"
 
-# storage:
-#   files:
-#   - filesystem: "root"
-#     path: "/opt/bin/mc"
-#     mode: 0755
-#     contents:
-#       source: "https://example.com/metadata-script.sh"
-#       verification:
-#         hash: sha512-...  # <type>-<value>
+storage:
+  files:
+  - filesystem: "root"
+    path: "/opt/bin/mc"
+    mode: 0755
+    contents:
+      remote:
+        url:
+        verification:
+          hash:
+            function: sha512
+            sum:
 
 systemd:
   units:
