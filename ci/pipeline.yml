@@ -69,7 +69,7 @@ jobs:
         - name: bin
         run:
           path: /bin/bash
-          args: [ "-c", "go build -o bin/mc main.go && shasum -a 512 bin/mc | cut -d' ' -f1 > bin/sha" ]
+          args: [ "-ce", "go build -o bin/mc main.go && shasum -a 512 bin/mc | cut -d' ' -f1 > bin/sha" ]
     - task: generate-config
       privileged: true
       config:
@@ -87,16 +87,16 @@ jobs:
         run:
           path: /bin/bash
           args:
-          - -c
+          - -ce
           - |
             pushd repo
             bosh int container-linux-config.yaml -o ci/clc-mc-file.yml \
-                 -v=mc_url=https://github.com/starkandwayne/molten-core/releases/download/v$(cat version/number)/mc \
-                 -v=mc_sha512=$(cat bin/sha) > container-linux-config.yaml.tmp
+                 -v=mc_url=https://github.com/starkandwayne/molten-core/releases/download/v$(cat ../version/number)/mc \
+                 -v=mc_sha512=$(cat ../bin/sha) > container-linux-config.yaml.tmp
             mv container-linux-config.yaml{.tmp,}
             git config --global user.email "ci@starkandwayne.com"
             git config --global user.name "CI Bot"
-            git add -A && git commit -m "Release: $(cat version/number)"
+            git add -A && git commit -m "Release: $(cat ../version/number)"
     - put: molten-core-src
       params:
         repository: repo
