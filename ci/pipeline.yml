@@ -7,7 +7,6 @@ jobs:
     - get: molten-core-src
       trigger: true
     - task: test
-      privileged: true
       config:
         platform: linux
         image_resource:
@@ -28,7 +27,6 @@ jobs:
     - get: molten-core-bucc-dockerfile
       trigger: true
     - task: build
-      privileged: true
       config:
         platform: linux
         image_resource:
@@ -56,7 +54,6 @@ jobs:
       passed: [ unit-test ]
     - get: version
     - task: build-binary
-      privileged: true
       config:
         platform: linux
         image_resource:
@@ -71,7 +68,6 @@ jobs:
           path: /bin/bash
           args: [ "-ce", "go build -o bin/mc main.go && shasum -a 512 bin/mc | cut -d' ' -f1 > bin/sha" ]
     - task: generate-config
-      privileged: true
       config:
         platform: linux
         image_resource:
