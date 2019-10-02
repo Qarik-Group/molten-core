@@ -145,6 +145,7 @@ resources:
     - go.sum
     - '*.go'
     - '*/*.go'
+    - container-linux-config.yaml
 
 - name: molten-core-bucc-dockerfile
   type: git
