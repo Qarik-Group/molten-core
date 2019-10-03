@@ -5,6 +5,10 @@ ct -out-file ../coreos-vagrant/config.ign \
    -in-file <(bosh int container-linux-config.yaml \
                    -o <(echo '[{"type":"replace","path":"/flannel/interface?","value":"eth1"}]'))
 
+if [ -d "../coreos-vagrant" ]; then
+  echo "Please clone the following repo: https://github.com/coreos/coreos-vagrant in ../coreos-vagrant"
+fi
+
 pushd ../coreos-vagrant
 cat <<EOF > config.rb
 # Size of the CoreOS cluster created by Vagrant
