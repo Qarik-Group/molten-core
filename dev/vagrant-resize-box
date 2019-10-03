@@ -10,9 +10,9 @@ diskUUID() {
 
 for vmdk in $(find ~/.vagrant.d/boxes/${boxName} | grep vmdk); do
     VBoxManage clonemedium ${vmdk} ${tmpVDI} --format vdi
-    Vboxmanage closemedium disk $(diskUUID ${vmdk}) --delete
+    VBoxManage closemedium disk $(diskUUID ${vmdk}) --delete
     VBoxManage modifymedium ${tmpVDI} --resize ${resizeTo}
     VBoxManage clonemedium ${tmpVDI} ${vmdk} --format vmdk
-    Vboxmanage closemedium disk $(diskUUID ${vmdk})
-    Vboxmanage closemedium disk $(diskUUID ${tmpVDI}) --delete
+    VBoxManage closemedium disk $(diskUUID ${vmdk})
+    VBoxManage closemedium disk $(diskUUID ${tmpVDI}) --delete
 done
