@@ -1,5 +1,4 @@
 #!/bin/bash
-
 file=""
 name=""
 case ${1} in
@@ -17,4 +16,4 @@ case ${1} in
         ;;
 esac
 
-echo "fly -t bucc set-pipeline -p deploy-${name} -c <(echo '$(spruce json examples/deploy-${file}.yml)')" | pbcopy
+echo "fly -t bucc set-pipeline -p deploy-${name} -c <(echo '$(spruce json examples/deploy-${file}.yml)')"
