@@ -6,6 +6,10 @@ jobs:
       trigger: true
     - get: stemcell
     - get: opsfile
+    - get: cloud-config
+  - put: config
+    params:
+      manifest: cloud-config/cloud-config.yml
   - put: deploy
     params:
       manifest: cf-deployment/cf-deployment.yml
@@ -13,9 +17,11 @@ jobs:
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
       - cf-deployment/operations/use-latest-stemcell.yml
+      - cf-deployment/operations/experimental/fast-deploy-with-downtime-and-danger.yml
       - opsfile/opsfile.yml
       vars:
-        system_domain: ((moltencore.public_ips.0)).xip.io
+        system_domain: ((moltencore.public_ips.z1)).xip.io
+
 resources:
 - name: opsfile
   type: file
@@ -41,56 +47,131 @@ resources:
       # make zones configurable
       - type: replace
         path: /instance_groups/name=scheduler/azs
-        value: ((moltencore.azs_other))
+        value: ((moltencore.other_azs))
       - type: replace
         path: /instance_groups/name=router/azs
-        value: ((moltencore.azs_other))
+        value: ((moltencore.other_azs))
+      - type: replace
+        path: /instance_groups/name=router/instances
+        value: ((moltencore.sizes.other_azs.x1))
       - type: replace
         path: /instance_groups/name=tcp-router/azs
-        value: ((moltencore.azs_other))
+        value: ((moltencore.other_azs))
+      - type: replace
+        path: /instance_groups/name=tcp-router/instances
+        value: ((moltencore.sizes.other_azs.x1))
       - type: replace
         path: /instance_groups/name=nats/azs
-        value: ((moltencore.azs))
+        value: ((moltencore.all_azs))
       - type: replace
         path: /instance_groups/name=diego-api/azs
-        value: ((moltencore.azs_other))
+        value: ((moltencore.other_azs))
       - type: replace
         path: /instance_groups/name=uaa/azs
-        value: ((moltencore.azs_other))
+        value: ((moltencore.other_azs))
       - type: replace
         path: /instance_groups/name=diego-cell/azs
-        value: ((moltencore.azs))
+        value: ((moltencore.all_azs))
+      - type: replace
+        path: /instance_groups/name=diego-cell/instances
+        value: ((moltencore.sizes.all_azs.x2))
       - type: replace
         path: /instance_groups/name=api/azs
-        value: ((moltencore.azs_other))
+        value: ((moltencore.other_azs))
       - type: replace
         path: /instance_groups/name=cc-worker/azs
-        value: ((moltencore.azs_other))
+        value: ((moltencore.other_azs))
       - type: replace
         path: /instance_groups/name=adapter/azs
-        value: ((moltencore.azs_other))
+        value: ((moltencore.other_azs))
       - type: replace
         path: /instance_groups/name=doppler/azs
-        value: ((moltencore.azs_other))
+        value: ((moltencore.other_azs))
       - type: replace
         path: /instance_groups/name=log-api/azs
-        value: ((moltencore.azs_other))
+        value: ((moltencore.other_azs))
       - type: replace
         path: /instance_groups/name=credhub/azs
-        value: ((moltencore.azs_other))
+        value: ((moltencore.other_azs))
       - type: replace
         path: /instance_groups/name=database/azs
-        value: [ ((moltencore.az_singleton)) ]
+        value: [ ((moltencore.singleton_az)) ]
       - type: replace
         path: /instance_groups/name=singleton-blobstore/azs
-        value: [ ((moltencore.az_singleton)) ]
+        value: [ ((moltencore.singleton_az)) ]
       - type: replace
         path: /instance_groups/name=smoke-tests/azs
-        value: [ ((moltencore.az_singleton)) ]
+        value: [ ((moltencore.singleton_az)) ]
       - type: replace
         path: /instance_groups/name=rotate-cc-database-key/azs
-        value: [ ((moltencore.az_singleton)) ]
+        value: [ ((moltencore.singleton_az)) ]
 
+- name: cloud-config
+  type: file
+  source:
+    filename: cloud-config.yml
+    content:
+      disk_types:
+      - disk_size: 1024
+        name: 1GB
+      - disk_size: 5120
+        name: 5GB
+      - disk_size: 10240
+        name: 10GB
+      - disk_size: 100240
+        name: 100GB
+      vm_extensions:
+      - name: 5GB_ephemeral_disk
+      - name: 10GB_ephemeral_disk
+      - name: 50GB_ephemeral_disk
+      - name: 100GB_ephemeral_disk
+      - name: 500GB_ephemeral_disk
+      - name: 1TB_ephemeral_disk
+      - name: cf-router-network-properties
+        cloud_properties:
+          PortBindings:
+            80/tcp:
+            - HostPort: '80'
+              HostIp: 0.0.0.0
+            443/tcp:
+            - HostPort: '443'
+              HostIp: 0.0.0.0
+          ports: [ 80/tcp, 443/tcp ]
+      - name: diego-ssh-proxy-network-properties
+        cloud_properties:
+          PortBindings:
+            2222/tcp:
+            - HostPort: '2222'
+              HostIp: 0.0.0.0
+          ports: [ 2222/tcp ]
+      - name: cf-tcp-router-network-properties
+        # TODO find a way to open port range 1024-1123
+        cloud_properties:
+          PortBindings:
+            1024/tcp:
+            - HostPort: '1024'
+              HostIp: 0.0.0.0
+            1025/tcp:
+            - HostPort: '1025'
+              HostIp: 0.0.0.0
+            1026/tcp:
+            - HostPort: '1026'
+              HostIp: 0.0.0.0
+            1027/tcp:
+            - HostPort: '1027'
+              HostIp: 0.0.0.0
+          ports:
+          - 1024/tcp
+          - 1025/tcp
+          - 1026/tcp
+          - 1027/tcp
+      vm_types:
+      - name: minimal
+        cloud_properties: { RestartPolicy: { Name: always } }
+      - name: small
+        cloud_properties: { RestartPolicy: { Name: always } }
+      - name: small-highmem
+        cloud_properties: { RestartPolicy: { Name: always } }
 
 - name: cf-deployment
   type: git
@@ -105,7 +186,16 @@ resources:
     deployment: cf
     target: ((bosh_environment))
     client: ((bosh_client))
-    client_id: ((bosh_client))
+    client_secret: ((bosh_client_secret))
+    ca_cert: ((bosh_ca_cert))
+
+- name: config
+  type: bosh-config
+  source:
+    config: cloud
+    name: cf
+    target: ((bosh_environment))
+    client: ((bosh_client))
     client_secret: ((bosh_client_secret))
     ca_cert: ((bosh_ca_cert))
 
@@ -125,3 +215,8 @@ resource_types:
   source:
     repository: aequitas/concourse-file-resource
     tag: latest
+
+- name: bosh-config
+  type: docker-image
+  source:
+    repository: cfcommunity/bosh-config-resource
