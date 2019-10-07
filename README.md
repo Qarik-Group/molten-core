@@ -31,9 +31,11 @@ it is running. Now from `z0` you can start an interactive management shell with:
 mc shell
 ```
 
-Upon starting the shell you will be presented with the login credentials for the
-Concourse web UI.
+To find the Concourse login credentials run:
 
+```
+bucc info
+```
 
 The following cli's have been pre-configured:
 

@@ -63,7 +63,7 @@ func (c *Client) Up() error {
 
 func (c *Client) Shell() error {
 	return c.run([]string{"/bin/bash", "-c",
-		"/bin/bash --init-file <(echo 'source ~/.bashrc && bucc fly >/dev/null && bucc info')"}, true)
+		"/bin/bash --init-file <(echo 'source ~/.bashrc && bucc fly >/dev/null')"}, true)
 }
 
 func (c *Client) UpdateCloudConfig(confs *[]config.NodeConfig) error {
