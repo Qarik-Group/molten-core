@@ -10,11 +10,21 @@ import (
 	"strconv"
 )
 
+var (
+	sizeMultipliers = []int{1, 2, 4, 8, 16, 32, 64}
+)
+
 type moltenCoreConfig struct {
-	SingletonAZ string            `json:"az_singleton"`
-	OtherAZs    []string          `json:"azs_other"`
-	AllAZs      []string          `json:"azs"`
+	SingletonAZ string            `json:"singleton_az"`
+	OtherAZs    []string          `json:"other_azs"`
+	AllAZs      []string          `json:"all_azs"`
 	PublicIPs   map[string]string `json:"public_ips"`
+	Sizes       sizes             `json:"sizes"`
+}
+
+type sizes struct {
+	OtherAZs map[string]int `json:"other_azs"`
+	AllAZs   map[string]int `json:"all_azs"`
 }
 
 func renderMoltenCoreConfig(confs *[]config.NodeConfig) (string, error) {
@@ -31,6 +41,13 @@ func renderMoltenCoreConfig(confs *[]config.NodeConfig) (string, error) {
 			mcconf.OtherAZs = append(mcconf.OtherAZs, conf.Zone())
 			publicIPs = append(publicIPs, conf.PublicIP)
 		}
+	}
+
+	mcconf.Sizes.AllAZs = make(map[string]int)
+	mcconf.Sizes.OtherAZs = make(map[string]int)
+	for _, size := range sizeMultipliers {
+		mcconf.Sizes.AllAZs[fmt.Sprintf("x%d", size)] = size * len(mcconf.AllAZs)
+		mcconf.Sizes.OtherAZs[fmt.Sprintf("x%d", size)] = size * len(mcconf.OtherAZs)
 	}
 
 	sort.Slice(publicIPs, func(i, j int) bool {
