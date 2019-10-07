@@ -16,4 +16,4 @@ case ${1} in
         ;;
 esac
 
-echo "fly -t bucc set-pipeline -p deploy-${name} -c <(echo '$(spruce json examples/deploy-${file}.yml)')"
+echo "fly -t mc set-pipeline -p deploy-${name} -c <(echo '$(spruce json examples/deploy-${file}.yml)')"
