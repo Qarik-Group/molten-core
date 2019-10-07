@@ -1,13 +1,9 @@
 package bucc
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/starkandwayne/molten-core/config"
-	"net"
-	"sort"
-	"strconv"
 )
 
 var (
@@ -30,16 +26,14 @@ type sizes struct {
 func renderMoltenCoreConfig(confs *[]config.NodeConfig) (string, error) {
 	var mcconf moltenCoreConfig
 	mcconf.PublicIPs = make(map[string]string)
-	var publicIPs []net.IP
-
 	for _, conf := range *confs {
 		mcconf.AllAZs = append(mcconf.AllAZs, conf.Zone())
+		mcconf.PublicIPs[conf.Zone()] = conf.PublicIP.String()
 
 		if conf.IsSingletonZone() {
 			mcconf.SingletonAZ = conf.Zone()
 		} else {
 			mcconf.OtherAZs = append(mcconf.OtherAZs, conf.Zone())
-			publicIPs = append(publicIPs, conf.PublicIP)
 		}
 	}
 
@@ -48,14 +42,6 @@ func renderMoltenCoreConfig(confs *[]config.NodeConfig) (string, error) {
 	for _, size := range sizeMultipliers {
 		mcconf.Sizes.AllAZs[fmt.Sprintf("x%d", size)] = size * len(mcconf.AllAZs)
 		mcconf.Sizes.OtherAZs[fmt.Sprintf("x%d", size)] = size * len(mcconf.OtherAZs)
-	}
-
-	sort.Slice(publicIPs, func(i, j int) bool {
-		return bytes.Compare(publicIPs[i], publicIPs[j]) < 0
-	})
-
-	for i, ip := range publicIPs {
-		mcconf.PublicIPs[strconv.FormatInt(int64(i), 10)] = ip.String()
 	}
 
 	raw, err := json.Marshal(mcconf)
