@@ -108,7 +108,7 @@ func (c *Client) pullImage() error {
 	ctx := context.Background()
 	images, err := c.dcli.ImageList(ctx, types.ImageListOptions{})
 	if err != nil {
-		return fmt.Errorf("failed to list images: %s", buccImage, err)
+		return fmt.Errorf("failed to list images: %s", err)
 	}
 	for _, img := range images {
 		for _, tag := range img.RepoTags {
