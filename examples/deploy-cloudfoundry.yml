@@ -13,7 +13,6 @@ jobs:
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
       - cf-deployment/operations/use-latest-stemcell.yml
-      - cf-deployment/operations/scale-to-one-az.yml
       - opsfile/opsfile.yml
       vars:
         system_domain: ((moltencore.public_ips.0)).xip.io
@@ -39,6 +38,59 @@ resources:
       - type: replace
         path: /instance_groups/name=diego-api/jobs/name=locket/properties?/set_kernel_parameters
         value: false
+      # make zones configurable
+      - type: replace
+        path: /instance_groups/name=scheduler/azs
+        value: ((moltencore.azs_other))
+      - type: replace
+        path: /instance_groups/name=router/azs
+        value: ((moltencore.azs_other))
+      - type: replace
+        path: /instance_groups/name=tcp-router/azs
+        value: ((moltencore.azs_other))
+      - type: replace
+        path: /instance_groups/name=nats/azs
+        value: ((moltencore.azs))
+      - type: replace
+        path: /instance_groups/name=diego-api/azs
+        value: ((moltencore.azs_other))
+      - type: replace
+        path: /instance_groups/name=uaa/azs
+        value: ((moltencore.azs_other))
+      - type: replace
+        path: /instance_groups/name=diego-cell/azs
+        value: ((moltencore.azs))
+      - type: replace
+        path: /instance_groups/name=api/azs
+        value: ((moltencore.azs_other))
+      - type: replace
+        path: /instance_groups/name=cc-worker/azs
+        value: ((moltencore.azs_other))
+      - type: replace
+        path: /instance_groups/name=adapter/azs
+        value: ((moltencore.azs_other))
+      - type: replace
+        path: /instance_groups/name=doppler/azs
+        value: ((moltencore.azs_other))
+      - type: replace
+        path: /instance_groups/name=log-api/azs
+        value: ((moltencore.azs_other))
+      - type: replace
+        path: /instance_groups/name=credhub/azs
+        value: ((moltencore.azs_other))
+      - type: replace
+        path: /instance_groups/name=database/azs
+        value: [ ((moltencore.az_singleton)) ]
+      - type: replace
+        path: /instance_groups/name=singleton-blobstore/azs
+        value: [ ((moltencore.az_singleton)) ]
+      - type: replace
+        path: /instance_groups/name=smoke-tests/azs
+        value: [ ((moltencore.az_singleton)) ]
+      - type: replace
+        path: /instance_groups/name=rotate-cc-database-key/azs
+        value: [ ((moltencore.az_singleton)) ]
+
 
 - name: cf-deployment
   type: git
