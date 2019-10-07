@@ -6,11 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/subosito/gotenv"
 
 	"github.com/starkandwayne/molten-core/util"
 
@@ -18,7 +21,9 @@ import (
 )
 
 const (
-	EtcdSubnetsPath string = "/coreos.com/network/subnets"
+	EtcdSubnetsPath      string = "/coreos.com/network/subnets"
+	flannelSubnetFile           = "/run/flannel/subnet.env"
+	flannelSubnetEnvName        = "FLANNEL_SUBNET"
 )
 
 type Subnet struct {
@@ -83,14 +88,24 @@ func (s Subnet) etcdKey() string {
 }
 
 func IsFirstSubnet(subnet Subnet) (bool, error) {
-	subnets, err := GetSubnets(nil)
+	subnets, err := getSubnets()
 	if err != nil {
 		return false, err
 	}
 	return subnet.Equals(subnets[0]), nil
 }
 
-func GetSubnets(query *net.IP) ([]Subnet, error) {
+func GetNodeSubnet() (Subnet, error) {
+	gotenv.Load(flannelSubnetFile)
+	v := os.Getenv(flannelSubnetEnvName)
+	_, ipv4Net, err := net.ParseCIDR(v)
+	if err != nil {
+		return Subnet{}, fmt.Errorf("failed to parse subnet CIDR: %s", err)
+	}
+	return Subnet{cidr: ipv4Net}, nil
+}
+
+func getSubnets() ([]Subnet, error) {
 	kapi, err := util.NewEtcdV2Client()
 	if err != nil {
 		return []Subnet{}, err
@@ -117,9 +132,6 @@ func GetSubnets(query *net.IP) ([]Subnet, error) {
 			return []Subnet{}, fmt.Errorf("failed to parse flannel subnet: %s", err)
 		}
 
-		if query != nil && res.PublicIP.Equal(*query) {
-			return []Subnet{subnet}, nil
-		}
 		subnets[res.PublicIP.String()] = subnet
 		ips = append(ips, res.PublicIP)
 	}

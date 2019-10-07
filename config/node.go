@@ -138,11 +138,10 @@ func LoadNodeConfig() (*NodeConfig, error) {
 		return nil, fmt.Errorf("failed to lookup public node ip: %s", err)
 	}
 
-	subnets, err := flannel.GetSubnets(&privateIP)
-	if err != nil || len(subnets) == 0 {
+	subnet, err := flannel.GetNodeSubnet()
+	if err != nil {
 		return nil, fmt.Errorf("failed to get flannel subnet: %s", err)
 	}
-	subnet := subnets[0]
 
 	isSingletonZone, err := flannel.IsFirstSubnet(subnet)
 	if err != nil {
