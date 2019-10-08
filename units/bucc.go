@@ -35,5 +35,26 @@ var (
 				unit.NewUnitOption("Install", "WantedBy", "multi-user.target"),
 			},
 		},
+		// bucc-sync-dns is a workaround for https://github.com/cloudfoundry/bosh/issues/2103
+		{
+			Name: "bucc-sync-dns.service",
+			Contents: []*unit.UnitOption{
+				unit.NewUnitOption("Unit", "Description", "Forcefully sync bosh-dns"),
+				unit.NewUnitOption("Unit", "After", "bucc.service"),
+				unit.NewUnitOption("Unit", "Requires", "bucc.service"),
+
+				unit.NewUnitOption("Service", "Type", "oneshot"),
+				unit.NewUnitOption("Service", "ExecStart", "/bin/bash -c \"docker exec $(jq -r '.current_vm_cid' /var/lib/moltencore/bucc/state.json) /var/vcap/jobs/director/bin/trigger-one-time-sync-dns\""),
+				unit.NewUnitOption("Service", "StandardOutput", "journal"),
+			},
+		},
+		{
+			Name: "bucc-sync-dns.timer",
+			Contents: []*unit.UnitOption{
+				unit.NewUnitOption("Unit", "Description", "Run sync-dns.service every 30 seconds"),
+
+				unit.NewUnitOption("Timer", "OnCalendar", "*:*:0,30"),
+			},
+		},
 	}
 )
