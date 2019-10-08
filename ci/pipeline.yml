@@ -27,6 +27,7 @@ jobs:
     - get: molten-core-bucc-dockerfile
       trigger: true
     - task: build
+      privileged: true
       config:
         platform: linux
         image_resource:
