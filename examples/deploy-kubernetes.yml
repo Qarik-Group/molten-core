@@ -6,14 +6,56 @@ jobs:
       trigger: true
     - get: stemcell
     - get: opsfile
+    - get: cloud-config
+  - put: config
+    params:
+      manifest: cloud-config/cloud-config.yml
   - put: deploy
     params:
       manifest: kubo-deployment/manifests/cfcr.yml
       stemcells: [ stemcell/stemcell.tgz ]
       ops_files:
+      - kubo-deployment/manifests/ops-files/add-vm-extensions-to-master.yml
+      - kubo-deployment/manifests/ops-files/add-hostname-to-master-certificate.yml
       - opsfile/opsfile.yml
       vars:
-#        system_domain: ((moltencore.public_ips.0)).xip.io
+        api-hostname: ((moltencore.public_ips.z0))
+- name: generate-k8s-cli-config
+  public: false
+  plan:
+  - task: generate-config
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: {repository: starkandwayne/concourse, tag: latest}
+      params:
+        CREDHUB_CA: ((credhub_ca_cert))
+        CREDHUB_SERVER: ((credhub_url))
+        CREDHUB_CLIENT: ((credhub_username))
+        CREDHUB_SECRET: ((credhub_password))
+        cluster: ((bosh_name))/cfcr
+        apiserver: https://((moltencore.public_ips.z0)):8443
+      run:
+        path: /bin/bash
+        args:
+        - -ec
+        - |
+          echo "${CREDHUB_CA}" > /tmp/ca; export CREDHUB_CA_CERT=/tmp/ca
+
+          ca_cert_base64=$(bosh int <(credhub get -n "${cluster}/tls-kubernetes" --output-json) --path=/value/ca | base64 -w 0)
+          admin_password=$(bosh int <(credhub get -n "${cluster}/kubo-admin-password" --output-json) --path=/value)
+
+          cluster_name="cfcr/${cluster}"; user_name="${cluster_name}/cfcr-admin"; context_name="${cluster_name}"
+
+          cat <<CONFIG
+          CA_CERT="${ca_cert_base64}"; echo -e \${CA_CERT} | base64 --decode > /tmp/ca.cert
+          kubectl config set-cluster "${cluster_name}" --server="${apiserver}" --certificate-authority=/tmp/ca.cert --embed-certs=true
+          kubectl config set-credentials "${user_name}" --token="${admin_password}"
+          kubectl config set-context "${context_name}" --cluster="${cluster_name}" --user="${user_name}"
+          kubectl config use-context "${context_name}"; rm /tmp/ca.cert
+          CONFIG
+
 resources:
 - name: opsfile
   type: file
@@ -22,13 +64,38 @@ resources:
     content:
       - type: replace
         path: /instance_groups/name=master/azs
-        value: ((moltencore.azs))
+        value: ((moltencore.all_azs))
       - type: replace
-        path: /instance_groups/name=worker/azs
-        value: ((moltencore.azs))
+        path: /instance_groups/name=master/instances
+        value: ((moltencore.sizes.all_azs.x1))
       - type: replace
         path: /instance_groups/name=apply-addons/azs
-        value: [ ((moltencore.az_singleton)) ]
+        value: [ ((moltencore.singleton_az)) ]
+      - type: replace
+        path: /instance_groups/name=worker/azs
+        value: ((moltencore.all_azs))
+      - type: replace
+        path: /instance_groups/name=worker/instances
+        value: ((moltencore.sizes.all_azs.x2))
+
+- name: cloud-config
+  type: file
+  source:
+    filename: cloud-config.yml
+    content:
+      vm_types:
+      - name: minimal
+        cloud_properties: { RestartPolicy: { Name: always } }
+      - name: small
+        cloud_properties: { RestartPolicy: { Name: always } }
+      - name: small-highmem
+        cloud_properties: { RestartPolicy: { Name: always } }
+      vm_extensions:
+      - name: cfcr-master-loadbalancer
+        cloud_properties:
+          PortBindings:
+            8443/tcp: [ { HostPort: "8443", HostIp: 0.0.0.0 } ]
+          ports: [ 8443/tcp ]
 
 - name: kubo-deployment
   type: git
@@ -43,7 +110,16 @@ resources:
     deployment: cfcr
     target: ((bosh_environment))
     client: ((bosh_client))
-    client_id: ((bosh_client))
+    client_secret: ((bosh_client_secret))
+    ca_cert: ((bosh_ca_cert))
+
+- name: config
+  type: bosh-config
+  source:
+    config: cloud
+    name: k8s
+    target: ((bosh_environment))
+    client: ((bosh_client))
     client_secret: ((bosh_client_secret))
     ca_cert: ((bosh_ca_cert))
 
@@ -63,3 +139,8 @@ resource_types:
   source:
     repository: aequitas/concourse-file-resource
     tag: latest
+
+- name: bosh-config
+  type: docker-image
+  source:
+    repository: cfcommunity/bosh-config-resource
