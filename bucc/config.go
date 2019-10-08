@@ -9,19 +9,22 @@ import (
 )
 
 const (
-	dockerSocket = "/run/docker.sock"
+	dockerSocket  = "/run/docker.sock"
+	concoursePort = "1443"
+	uaaPort       = "1444"
 )
 
 type Vars struct {
-	DirectorName    string `json:"director_name"`
-	Alias           string `json:"alias"`
-	DockerHost      string `json:"docker_host"`
-	Network         string `json:"network"`
-	InternalCIDR    string `json:"internal_cidr"`
-	InternalGW      string `json:"internal_gw"`
-	InternalIP      string `json:"internal_ip"`
-	HostIP          string `json:"host_ip"`
-	ConcourseDomain string `json:"concourse_domain"`
+	DirectorName      string `json:"director_name"`
+	Alias             string `json:"alias"`
+	DockerHost        string `json:"docker_host"`
+	Network           string `json:"network"`
+	InternalCIDR      string `json:"internal_cidr"`
+	InternalGW        string `json:"internal_gw"`
+	InternalIP        string `json:"internal_ip"`
+	HostIP            string `json:"host_ip"`
+	ConcourseHostPort string `json:"concourse_host_port"`
+	UAAHostPort       string `json:"uaa_host_port"`
 }
 
 func writeVars(path string, c *config.NodeConfig) error {
@@ -35,15 +38,16 @@ func writeVars(path string, c *config.NodeConfig) error {
 	}
 
 	vars := Vars{
-		DirectorName:    "molten-core",
-		Alias:           "mc",
-		DockerHost:      dockerSocket,
-		Network:         config.BOSHDockerNetworkName,
-		InternalCIDR:    c.Subnet.CIDR(),
-		InternalGW:      gw.String(),
-		InternalIP:      buccIP.String(),
-		HostIP:          "0.0.0.0",
-		ConcourseDomain: c.PublicIP.String(),
+		DirectorName:      "moltencore",
+		Alias:             "mc",
+		DockerHost:        dockerSocket,
+		Network:           config.BOSHDockerNetworkName,
+		InternalCIDR:      c.Subnet.CIDR(),
+		InternalGW:        gw.String(),
+		InternalIP:        buccIP.String(),
+		HostIP:            c.PublicIP.String(),
+		ConcourseHostPort: concoursePort,
+		UAAHostPort:       uaaPort,
 	}
 
 	data, err := json.Marshal(vars)

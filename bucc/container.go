@@ -55,9 +55,8 @@ func (c *Client) Up() error {
 		"--recreate",
 		"--cpi",
 		"docker",
-		"--flannel",
 		"--unix-sock",
-		"--concourse-lb",
+		"--host-bind-concourse",
 	}, false)
 }
 
