@@ -2,7 +2,7 @@ FROM ubuntu:bionic AS offline
 
 RUN apt-get update && apt-get install -y git curl
 
-ENV BUCC_VERSION 93cb113
+ENV BUCC_VERSION 898d0a8
 RUN git clone https://github.com/starkandwayne/bucc /bucc-build && \
 cd /bucc-build && git checkout ${BUCC_VERSION}
 
