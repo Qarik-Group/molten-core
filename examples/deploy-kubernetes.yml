@@ -20,6 +20,42 @@ jobs:
       - opsfile/opsfile.yml
       vars:
         api-hostname: ((moltencore.public_ips.z0))
+- name: generate-k8s-cli-config
+  public: false
+  plan:
+  - task: generate-config
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: {repository: starkandwayne/concourse, tag: latest}
+      params:
+        CREDHUB_CA: ((credhub_ca_cert))
+        CREDHUB_SERVER: ((credhub_url))
+        CREDHUB_CLIENT: ((credhub_username))
+        CREDHUB_SECRET: ((credhub_password))
+        cluster: ((bosh_name))/cfcr
+        apiserver: https://((moltencore.public_ips.z0)):8443
+      run:
+        path: /bin/bash
+        args:
+        - -ec
+        - |
+          echo "${CREDHUB_CA}" > /tmp/ca; export CREDHUB_CA_CERT=/tmp/ca
+
+          ca_cert_base64=$(bosh int <(credhub get -n "${cluster}/tls-kubernetes" --output-json) --path=/value/ca | base64 -w 0)
+          admin_password=$(bosh int <(credhub get -n "${cluster}/kubo-admin-password" --output-json) --path=/value)
+
+          cluster_name="cfcr/${cluster}"; user_name="${cluster_name}/cfcr-admin"; context_name="${cluster_name}"
+
+          cat <<CONFIG
+          CA_CERT="${ca_cert_base64}"; echo -e \${CA_CERT} | base64 --decode > /tmp/ca.cert
+          kubectl config set-cluster "${cluster_name}" --server="${apiserver}" --certificate-authority=/tmp/ca.cert --embed-certs=true
+          kubectl config set-credentials "${user_name}" --token="${admin_password}"
+          kubectl config set-context "${context_name}" --cluster="${cluster_name}" --user="${user_name}"
+          kubectl config use-context "${context_name}"; rm /tmp/ca.cert
+          CONFIG
+
 resources:
 - name: opsfile
   type: file
