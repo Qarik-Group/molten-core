@@ -20,7 +20,36 @@ jobs:
       - cf-deployment/operations/experimental/fast-deploy-with-downtime-and-danger.yml
       - opsfile/opsfile.yml
       vars:
-        system_domain: ((moltencore.public_ips.z1)).xip.io
+        system_domain: ((moltencore.public_ips.z0)).xip.io
+- name: generate-cf-cli-login-snippet
+  public: false
+  plan:
+  - task: generate-snippet
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: {repository: starkandwayne/concourse, tag: latest}
+      params:
+        CREDHUB_CA: ((credhub_ca_cert))
+        CREDHUB_SERVER: ((credhub_url))
+        CREDHUB_CLIENT: ((credhub_username))
+        CREDHUB_SECRET: ((credhub_password))
+        prefix: ((bosh_name))/cf
+        api: https://api.((moltencore.public_ips.z0)).xip.io
+      run:
+        path: /bin/bash
+        args:
+        - -ec
+        - |
+          echo "${CREDHUB_CA}" > /tmp/ca; export CREDHUB_CA_CERT=/tmp/ca
+
+          admin_password=$(bosh int <(credhub get -n "${prefix}/cf_admin_password" --output-json) --path=/value)
+
+          cat <<CONFIG
+          cf api --skip-ssl-validation ${api}
+          cf auth admin ${admin_password}
+          CONFIG
 
 resources:
 - name: opsfile
