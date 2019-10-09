@@ -31,6 +31,22 @@ const (
     {
       "disk_size": 1024,
       "name": "default"
+    },
+    {
+      "disk_size": 1024,
+      "name": "1GB"
+    },
+    {
+      "disk_size": 5120,
+      "name": "5GB"
+    },
+    {
+      "disk_size": 10240,
+      "name": "10GB"
+    },
+    {
+      "disk_size": 100240,
+      "name": "100GB"
     }
   ],
   "vm_types": [
@@ -41,6 +57,50 @@ const (
           "Name": "always"
         }
       }
+    },
+    {
+      "name": "minimal",
+      "cloud_properties": {
+	"RestartPolicy": {
+	  "Name": "always"
+	}
+      }
+    },
+    {
+      "name": "small",
+      "cloud_properties": {
+	"RestartPolicy": {
+	  "Name": "always"
+	}
+      }
+    },
+    {
+      "name": "small-highmem",
+      "cloud_properties": {
+	"RestartPolicy": {
+	  "Name": "always"
+	}
+      }
+    }
+  ],
+  "vm_extensions": [
+    {
+      "name": "5GB_ephemeral_disk"
+    },
+    {
+      "name": "10GB_ephemeral_disk"
+    },
+    {
+      "name": "50GB_ephemeral_disk"
+    },
+    {
+      "name": "100GB_ephemeral_disk"
+    },
+    {
+      "name": "500GB_ephemeral_disk"
+    },
+    {
+      "name": "1TB_ephemeral_disk"
     }
   ]
 }

@@ -83,13 +83,6 @@ resources:
   source:
     filename: cloud-config.yml
     content:
-      vm_types:
-      - name: minimal
-        cloud_properties: { RestartPolicy: { Name: always } }
-      - name: small
-        cloud_properties: { RestartPolicy: { Name: always } }
-      - name: small-highmem
-        cloud_properties: { RestartPolicy: { Name: always } }
       vm_extensions:
       - name: cfcr-master-loadbalancer
         cloud_properties:
