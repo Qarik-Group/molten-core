@@ -28,6 +28,9 @@ resources:
   source:
     filename: opsfile.yml
     content:
+      - type: replace
+        path: /update/initial_deploy_az_update_strategy?
+        value: parallel
       # Docker garden compatibility
       - type: replace
         path: /instance_groups/name=diego-cell/jobs/name=garden/properties/garden/apparmor_profile?

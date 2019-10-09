@@ -62,6 +62,17 @@ resources:
   source:
     filename: opsfile.yml
     content:
+      # speed up deploy
+      - type: replace
+        path: /update/initial_deploy_az_update_strategy?
+        value: parallel
+      - type: replace
+        path: /update/canaries
+        value: 0
+      - type: replace
+        path: /instance_groups/name=worker/update?/max_in_flight
+        value: 100%
+      # scale according to cluster size
       - type: replace
         path: /instance_groups/name=master/azs
         value: ((moltencore.all_azs))
