@@ -20,6 +20,10 @@ jobs:
       - opsfile/opsfile.yml
       vars:
         api-hostname: ((moltencore.public_ips.z0))
+  - put: errand
+    params:
+      name: apply-specs
+      when_changed: true
 - name: generate-k8s-cli-config
   public: false
   plan:
@@ -72,6 +76,17 @@ resources:
       - type: replace
         path: /instance_groups/name=worker/update?/max_in_flight
         value: 100%
+      # latest stemcell
+      - path: /stemcells/alias=default/version
+        type: replace
+        value: latest
+      # flannel udp
+      - type: replace
+        path: /instance_groups/name=master/jobs/name=flanneld/properties/backend-type?
+        value: udp
+      - type: replace
+        path: /instance_groups/name=worker/jobs/name=flanneld/properties/backend-type?
+        value: udp
       # scale according to cluster size
       - type: replace
         path: /instance_groups/name=master/azs
@@ -127,6 +142,15 @@ resources:
     client_secret: ((bosh_client_secret))
     ca_cert: ((bosh_ca_cert))
 
+- name: errand
+  type: bosh-errand
+  source:
+    deployment: cfcr
+    target: ((bosh_environment))
+    client: ((bosh_client))
+    client_secret: ((bosh_client_secret))
+    ca_cert: ((bosh_ca_cert))
+
 - name: stemcell
   type: bosh-io-stemcell
   source: { name: ((bosh_stemcell)) }
@@ -148,3 +172,8 @@ resource_types:
   type: docker-image
   source:
     repository: cfcommunity/bosh-config-resource
+
+- name: bosh-errand
+  type: docker-image
+  source:
+    repository: cfcommunity/bosh2-errand-resource
