@@ -12,13 +12,13 @@ storage:
   files:
   - contents:
       remote:
-        url: https://github.com/starkandwayne/molten-core/releases/download/v0.3.0/mc
+        url: https://github.com/starkandwayne/molten-core/releases/download/v0.4.0/mc
         verification:
           hash:
             function: sha512
-            sum: 68164a6b07ce05ac88bd63ab8f5e9a74f31603a0f942d49c9245dae44e7d29420e4e487290293b90ab2826f5be5d2eb447bf0f8b39d9f047901a33f3eea359ca
+            sum: 54f5d1fb4fd22c5a45dcf960ad8ac86e22032662b58d8f714853fe272cc722c9a320c88954e3c95b41f61a52997e283b42f1de7bc06a5be40a12269ffa578538
     filesystem: root
-    mode: 0777
+    mode: 511
     path: /opt/bin/mc
 systemd:
   units:
