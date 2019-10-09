@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/starkandwayne/molten-core/config"
 	"github.com/starkandwayne/molten-core/flannel"
@@ -19,6 +20,18 @@ func (cmd *InitCommand) register(app *kingpin.Application) {
 }
 
 func (cmd *InitCommand) run(c *kingpin.ParseContext) error {
+	cmd.logger.Printf("Waiting for all flannel subnets to be assigned")
+	for {
+		ok, status, err := flannel.GetSubnetStatus()
+		if err != nil {
+			return fmt.Errorf("failed to get subnet status: %s", err)
+		}
+		if ok {
+			break
+		}
+		cmd.logger.Printf("Waiting for flannel subnets: %s", status)
+		time.Sleep(time.Second)
+	}
 	cmd.logger.Printf("Loading node config")
 	conf, err := config.LoadNodeConfig()
 	if err != nil {

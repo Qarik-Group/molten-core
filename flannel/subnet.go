@@ -31,7 +31,7 @@ type Subnet struct {
 }
 
 func RemoveSubnetTTL(s Subnet) error {
-	kapi, err := util.NewEtcdV2Client()
+	kapi, err := util.NewEtcdV2KeysAPI()
 	if err != nil {
 		return err
 	}
@@ -87,6 +87,19 @@ func (s Subnet) etcdKey() string {
 		strings.Replace(s.cidr.String(), "/", "-", -1))
 }
 
+func GetSubnetStatus() (bool, string, error) {
+	members, err := getEtcdMemberCount()
+	if err != nil {
+		return false, "", err
+	}
+	subnets, err := getSubnets()
+	if err != nil {
+		return false, "", err
+	}
+	return len(subnets) == members, fmt.Sprintf("%d/%d",
+		members, len(subnets)), nil
+}
+
 func IsFirstSubnet(subnet Subnet) (bool, error) {
 	subnets, err := getSubnets()
 	if err != nil {
@@ -105,8 +118,22 @@ func GetNodeSubnet() (Subnet, error) {
 	return Subnet{cidr: ipv4Net}, nil
 }
 
+func getEtcdMemberCount() (int, error) {
+	c, err := util.NewEtcdV2MembersAPI()
+	if err != nil {
+		return 0, err
+	}
+
+	members, err := c.List(context.Background())
+	if err != nil {
+		return 0, fmt.Errorf("failed to list etcd members: %s", err)
+	}
+
+	return len(members), nil
+}
+
 func getSubnets() ([]Subnet, error) {
-	kapi, err := util.NewEtcdV2Client()
+	kapi, err := util.NewEtcdV2KeysAPI()
 	if err != nil {
 		return []Subnet{}, err
 	}

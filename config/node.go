@@ -51,7 +51,7 @@ func (nc NodeConfig) CPIName() string {
 }
 
 func (nc NodeConfig) save() error {
-	kapi, err := util.NewEtcdV2Client()
+	kapi, err := util.NewEtcdV2KeysAPI()
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func AssignZonesToNodeConfigs() error {
 }
 
 func LoadNodeConfigs() (*[]NodeConfig, error) {
-	kapi, err := util.NewEtcdV2Client()
+	kapi, err := util.NewEtcdV2KeysAPI()
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func LoadNodeConfig() (*NodeConfig, error) {
 		return nil, fmt.Errorf("failed to determine singleton zone: %s", err)
 	}
 
-	kapi, err := util.NewEtcdV2Client()
+	kapi, err := util.NewEtcdV2KeysAPI()
 	if err != nil {
 		return nil, err
 	}
