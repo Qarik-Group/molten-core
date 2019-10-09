@@ -18,7 +18,7 @@ storage:
             function: sha512
             sum: 68164a6b07ce05ac88bd63ab8f5e9a74f31603a0f942d49c9245dae44e7d29420e4e487290293b90ab2826f5be5d2eb447bf0f8b39d9f047901a33f3eea359ca
     filesystem: root
-    mode: 493
+    mode: 0777
     path: /opt/bin/mc
 systemd:
   units:
