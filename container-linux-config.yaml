@@ -1,13 +1,10 @@
 etcd:
   advertise_client_urls: http://{PRIVATE_IPV4}:2379
-  discovery: https://discovery.etcd.io/<token>
+  discovery: ETCD_DISCOVERY_PLACEHOLDER
   initial_advertise_peer_urls: http://{PRIVATE_IPV4}:2380
   listen_client_urls: http://0.0.0.0:2379
   listen_peer_urls: http://{PRIVATE_IPV4}:2380
   version: 3.2.27
-flannel:
-  network_config: '{"Network": "10.1.0.0/16"}'
-  public_ip: '{PRIVATE_IPV4}'
 storage:
   files:
   - contents:
@@ -18,24 +15,30 @@ storage:
             function: sha512
             sum: 54f5d1fb4fd22c5a45dcf960ad8ac86e22032662b58d8f714853fe272cc722c9a320c88954e3c95b41f61a52997e283b42f1de7bc06a5be40a12269ffa578538
     filesystem: root
-    mode: 511
+    mode: "0755"
     path: /opt/bin/mc
 systemd:
   units:
   - contents: |
       [Unit]
       Description=MoltenCore
-      Requires=etcd-member.service flanneld.service coreos-metadata.service
-      After=etcd-member.service flanneld.service coreos-metadata.service
+      Requires=etcd-member.service coreos-metadata.service
+      After=etcd-member.service coreos-metadata.service
 
       [Service]
       Type=oneshot
-      ExecStart=/opt/bin/mc init
+      ExecStart=/opt/bin/mc init --zone=MC_ZONE_PLACEHOLDR
       RemainAfterExit=true
       StandardOutput=journal
       User=root
 
       [Install]
-      WantedBy=multi-user.target docker.service
+      WantedBy=multi-user.target docker.service flanneld.service
     enable: true
     name: mc.service
+
+  # Disable auto updates until node draining has been implemented
+  - name: update-engine.service
+    mask: true
+  - name: locksmithd.service
+    mask: true

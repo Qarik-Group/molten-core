@@ -3,7 +3,7 @@
 ct -out-file ../coreos-vagrant/config.ign \
    -platform vagrant-virtualbox -pretty -strict \
    -in-file <(bosh int container-linux-config.yaml \
-                   -o <(echo '[{"type":"replace","path":"/flannel/interface?","value":"eth1"}]'))
+                   -o <(echo '[{"type":"remove","path":"/storage"}]'))
 
 if [ -d "../coreos-vagrant" ]; then
   echo "Please clone the following repo: https://github.com/coreos/coreos-vagrant in ../coreos-vagrant"
@@ -24,7 +24,8 @@ if ARGV[0].eql?('up')
   require 'open-uri'
   token = open(\$new_discovery_url).read
   data = File.read('config.ign')
-  data.gsub!(/https:\/\/discovery.etcd.io\/[^"]+/, (token + '\\\\'))
+  data.gsub!(/MC_ZONE_PLACEHOLDR/, "0 --dev")
+  data.gsub!(/ETCD_DISCOVERY_PLACEHOLDER/, token)
   File.open('config.ign', 'w') { |file| file.write(data) }
 end
 EOF

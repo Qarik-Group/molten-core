@@ -28,11 +28,11 @@ type Vars struct {
 }
 
 func writeVars(path string, c *config.NodeConfig) error {
-	gw, err := c.Subnet.IP(1)
+	gw, err := c.Subnet.Host(1)
 	if err != nil {
 		return fmt.Errorf("failed to get gatway ip: %s", err)
 	}
-	buccIP, err := c.Subnet.IP(10)
+	buccIP, err := c.Subnet.Host(10)
 	if err != nil {
 		return fmt.Errorf("failed to get bucc ip: %s", err)
 	}
@@ -42,7 +42,7 @@ func writeVars(path string, c *config.NodeConfig) error {
 		Alias:             "mc",
 		DockerHost:        dockerSocket,
 		Network:           config.BOSHDockerNetworkName,
-		InternalCIDR:      c.Subnet.CIDR(),
+		InternalCIDR:      c.Subnet.String(),
 		InternalGW:        gw.String(),
 		InternalIP:        buccIP.String(),
 		HostIP:            c.PublicIP.String(),

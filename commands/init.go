@@ -3,39 +3,39 @@ package commands
 import (
 	"fmt"
 	"log"
-	"time"
+	"strconv"
 
 	"github.com/starkandwayne/molten-core/config"
 	"github.com/starkandwayne/molten-core/flannel"
 	"github.com/starkandwayne/molten-core/units"
+	"github.com/starkandwayne/molten-core/util"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 type InitCommand struct {
-	logger *log.Logger
+	logger        *log.Logger
+	flannelSubnet string
+	zoneIndex     uint16
+	dev           bool
 }
 
 func (cmd *InitCommand) register(app *kingpin.Application) {
-	app.Command("init", "bootstrap node into MoltenCore cluster member").Action(cmd.run)
+	c := app.Command("init", "bootstrap node into MoltenCore cluster member").Action(cmd.run)
+	c.Flag("zone", "Index of this node, used for BOSH availability zone").Required().Uint16Var(&cmd.zoneIndex)
+	c.Flag("dev", "Base zone index of last private IP octet").BoolVar(&cmd.dev)
 }
 
 func (cmd *InitCommand) run(c *kingpin.ParseContext) error {
-	cmd.logger.Printf("Waiting for all flannel subnets to be assigned")
-	for {
-		ok, status, err := flannel.GetSubnetStatus()
-		if err != nil {
-			return fmt.Errorf("failed to get subnet status: %s", err)
-		}
-		if ok {
-			break
-		}
-		cmd.logger.Printf("Waiting for flannel subnets: %s", status)
-		time.Sleep(time.Second)
+	cmd.logger.Printf("Generating node config")
+	if cmd.dev {
+		ip, _ := util.LookupIpV4Address(false)
+		lastIPDiget := ip.String()[len(ip.String())-1:]
+		i, _ := strconv.ParseInt(lastIPDiget, 10, 16)
+		cmd.zoneIndex = uint16(i - 1)
 	}
-	cmd.logger.Printf("Loading node config")
-	conf, err := config.LoadNodeConfig()
+	conf, err := config.GenereateNodeConfig(cmd.zoneIndex)
 	if err != nil {
-		return fmt.Errorf("failed load node config: %s", err)
+		return fmt.Errorf("failed generate node config: %s", err)
 	}
 
 	cmd.logger.Printf("Writing Docker TLS certs")
@@ -46,6 +46,7 @@ func (cmd *InitCommand) run(c *kingpin.ParseContext) error {
 
 	cmd.logger.Printf("Writing MoltenCore managed systemd unit files")
 	u := []units.Unit{
+		units.Flannel(conf),
 		units.DockerTLSSocket(conf.Docker),
 		units.Docker,
 	}
@@ -58,9 +59,9 @@ func (cmd *InitCommand) run(c *kingpin.ParseContext) error {
 		return fmt.Errorf("failed enable systemd units: %s", err)
 	}
 
-	cmd.logger.Printf("Removing Flannel subnet TTL")
-	if err = flannel.RemoveSubnetTTL(conf.Subnet); err != nil {
-		return fmt.Errorf("failed to persist flannel subnets: %s", err)
+	cmd.logger.Printf("Configure Flannel subnet")
+	if err = flannel.ConfigureSubnet(conf.Subnet, conf.PrivateIP); err != nil {
+		return fmt.Errorf("failed to configure flannel subnet: %s", err)
 	}
 
 	return nil

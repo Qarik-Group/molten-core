@@ -127,11 +127,11 @@ func renderCloudConfig(confs *[]config.NodeConfig) (string, error) {
 	for _, conf := range *confs {
 		azs = append(azs, az{Name: conf.Zone(), CPI: conf.CPIName()})
 
-		gw, err := conf.Subnet.IP(1)
+		gw, err := conf.Subnet.Host(1)
 		if err != nil {
 			return "", fmt.Errorf("failed to determine cloud config gatway: %s", err)
 		}
-		resMax, err := conf.Subnet.IP(numberOfReservedIPs + 1)
+		resMax, err := conf.Subnet.Host(numberOfReservedIPs + 1)
 		if err != nil {
 			return "", fmt.Errorf("failed to determine cloud config reserved range: %s", err)
 		}
@@ -140,7 +140,7 @@ func renderCloudConfig(confs *[]config.NodeConfig) (string, error) {
 
 		subnets = append(subnets, subnet{
 			AZ:       conf.Zone(),
-			Range:    conf.Subnet.CIDR(),
+			Range:    conf.Subnet.String(),
 			Gateway:  gw.String(),
 			Reserved: []string{reserved},
 			CloudProperties: map[string]string{

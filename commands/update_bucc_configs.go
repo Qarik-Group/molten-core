@@ -24,11 +24,6 @@ func (cmd *UpdateBUCCConfigsCommand) run(c *kingpin.ParseContext) error {
 		return fmt.Errorf("failed load node config: %s", err)
 	}
 
-	cmd.logger.Printf("Assigning Zones to node configs")
-	if err := config.AssignZonesToNodeConfigs(); err != nil {
-		return fmt.Errorf("failed assign zones to node configs: %s", err)
-	}
-
 	cmd.logger.Printf("Loading node configs")
 	confs, err := config.LoadNodeConfigs()
 	if err != nil {

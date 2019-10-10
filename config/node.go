@@ -20,7 +20,7 @@ const (
 	etcdMolenCorePath  string = "/moltencore/nodes"
 	dockerCertValidFor        = time.Hour * 24 * 365
 	dockerTLSPort             = 2376
-	singletonZoneIndex        = uint(0)
+	singletonZoneIndex        = uint16(0)
 )
 
 type Docker struct {
@@ -32,75 +32,22 @@ type Docker struct {
 
 type NodeConfig struct {
 	Subnet    flannel.Subnet
-	ZoneIndex *uint `json:"zone,omitempty"`
+	ZoneIndex uint16
 	Docker    Docker
 	PrivateIP net.IP
 	PublicIP  net.IP
 }
 
 func (nc NodeConfig) IsSingletonZone() bool {
-	return nc.ZoneIndex != nil && *nc.ZoneIndex == singletonZoneIndex
+	return nc.ZoneIndex == singletonZoneIndex
 }
 
 func (nc NodeConfig) Zone() string {
-	return fmt.Sprintf("z%d", *nc.ZoneIndex)
+	return fmt.Sprintf("z%d", nc.ZoneIndex)
 }
 
 func (nc NodeConfig) CPIName() string {
 	return fmt.Sprintf("docker-%s", nc.Zone())
-}
-
-func (nc NodeConfig) save() error {
-	kapi, err := util.NewEtcdV2KeysAPI()
-	if err != nil {
-		return err
-	}
-
-	ctx := context.Background()
-
-	rawConf, err := json.Marshal(nc)
-	if err != nil {
-		return fmt.Errorf("failed to marshal node config: %s", err)
-	}
-	_, err = kapi.Set(ctx, nodePath(nc.PrivateIP), string(rawConf), nil)
-	if err != nil {
-		return fmt.Errorf("failed to update node config in etcd: %s", err)
-	}
-	return nil
-}
-
-func AssignZonesToNodeConfigs() error {
-	currentNode, err := LoadNodeConfig()
-	if err != nil {
-		return err
-	}
-	if !currentNode.IsSingletonZone() {
-		return fmt.Errorf("Assigning Zones to Nodes is only allowed on singleton node")
-	}
-
-	nodes, err := LoadNodeConfigs()
-	if err != nil {
-		return err
-	}
-
-	index := singletonZoneIndex
-	for _, node := range *nodes {
-		if node.ZoneIndex != nil && index < *node.ZoneIndex {
-			index = *node.ZoneIndex
-		}
-	}
-
-	for _, node := range *nodes {
-		if node.ZoneIndex == nil {
-			index += 1
-			node.ZoneIndex = &index
-			if err := node.save(); err != nil {
-				return fmt.Errorf("failed to update ZoneIndex in etcd: %s", err)
-			}
-		}
-	}
-
-	return nil
 }
 
 func LoadNodeConfigs() (*[]NodeConfig, error) {
@@ -133,39 +80,38 @@ func LoadNodeConfig() (*NodeConfig, error) {
 		return nil, fmt.Errorf("failed to lookup private node ip: %s", err)
 	}
 
+	kapi, err := util.NewEtcdV2KeysAPI()
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	resp, err := kapi.Get(ctx, nodePath(privateIP), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load node config from etcd: %s", err)
+	}
+
+	var c NodeConfig
+	err = json.Unmarshal([]byte(resp.Node.Value), &c)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal node config: %s", err)
+	}
+	return &c, nil
+}
+
+func GenereateNodeConfig(index uint16) (*NodeConfig, error) {
+	privateIP, err := util.LookupIpV4Address(false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lookup private node ip: %s", err)
+	}
+
 	publicIP, err := util.LookupIpV4Address(true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to lookup public node ip: %s", err)
 	}
 
-	subnet, err := flannel.GetNodeSubnet()
+	subnet, err := flannel.GetSubnetByIndex(index)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get flannel subnet: %s", err)
-	}
-
-	isSingletonZone, err := flannel.IsFirstSubnet(subnet)
-	if err != nil {
-		return nil, fmt.Errorf("failed to determine singleton zone: %s", err)
-	}
-
-	kapi, err := util.NewEtcdV2KeysAPI()
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	resp, err := kapi.Get(ctx, nodePath(privateIP), nil)
-	if err != nil && !client.IsKeyNotFound(err) {
-		return nil, fmt.Errorf("failed to load node config from etcd: %s", err)
-	}
-
-	if resp != nil {
-		var c NodeConfig
-		err = json.Unmarshal([]byte(resp.Node.Value), &c)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal node config: %s", err)
-		}
-		return &c, nil
+		return nil, fmt.Errorf("failed to generate docker certs: %s", err)
 	}
 
 	docker, err := newDocker(subnet, privateIP)
@@ -173,13 +119,8 @@ func LoadNodeConfig() (*NodeConfig, error) {
 		return nil, fmt.Errorf("failed to generate docker certs: %s", err)
 	}
 
-	conf := NodeConfig{Subnet: subnet, Docker: docker,
+	conf := NodeConfig{Subnet: subnet, Docker: docker, ZoneIndex: index,
 		PrivateIP: privateIP, PublicIP: publicIP}
-
-	if isSingletonZone {
-		i := singletonZoneIndex
-		conf.ZoneIndex = &i
-	}
 
 	err = conf.save()
 	if err != nil {
@@ -187,6 +128,25 @@ func LoadNodeConfig() (*NodeConfig, error) {
 	}
 
 	return &conf, nil
+}
+
+func (nc NodeConfig) save() error {
+	kapi, err := util.NewEtcdV2KeysAPI()
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+
+	rawConf, err := json.Marshal(nc)
+	if err != nil {
+		return fmt.Errorf("failed to marshal node config: %s", err)
+	}
+	_, err = kapi.Set(ctx, nodePath(nc.PrivateIP), string(rawConf), nil)
+	if err != nil {
+		return fmt.Errorf("failed to update node config in etcd: %s", err)
+	}
+	return nil
 }
 
 func nodePath(privateIP net.IP) string {
