@@ -24,7 +24,7 @@ if ARGV[0].eql?('up')
   require 'open-uri'
   token = open(\$new_discovery_url).read
   data = File.read('config.ign')
-  data.gsub!(/MC_ZONE_PLACEHOLDR/, "0 --dev")
+  data.gsub!(/MC_ZONE_PLACEHOLDER/, "0 --dev")
   data.gsub!(/ETCD_DISCOVERY_PLACEHOLDER/, token)
   File.open('config.ign', 'w') { |file| file.write(data) }
 end

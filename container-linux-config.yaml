@@ -27,7 +27,7 @@ systemd:
 
       [Service]
       Type=oneshot
-      ExecStart=/opt/bin/mc init --zone=MC_ZONE_PLACEHOLDR
+      ExecStart=/opt/bin/mc init --zone=MC_ZONE_PLACEHOLDER
       RemainAfterExit=true
       StandardOutput=journal
       User=root
