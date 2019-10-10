@@ -9,11 +9,11 @@ storage:
   files:
   - contents:
       remote:
-        url: https://github.com/starkandwayne/molten-core/releases/download/v0.4.0/mc
+        url: https://github.com/starkandwayne/molten-core/releases/download/v0.5.0/mc
         verification:
           hash:
             function: sha512
-            sum: 54f5d1fb4fd22c5a45dcf960ad8ac86e22032662b58d8f714853fe272cc722c9a320c88954e3c95b41f61a52997e283b42f1de7bc06a5be40a12269ffa578538
+            sum: c9cc8e873bf1a2081673c8647d94ed5f028a2661e1fba4e2c71789f0eb7be598e46ad4b0a98ba9238626c40a65d86c985b6acf64267c9f04fa811429b617b530
     filesystem: root
     mode: "0755"
     path: /opt/bin/mc
@@ -36,9 +36,7 @@ systemd:
       WantedBy=multi-user.target docker.service flanneld.service
     enable: true
     name: mc.service
-
-  # Disable auto updates until node draining has been implemented
-  - name: update-engine.service
-    mask: true
-  - name: locksmithd.service
-    mask: true
+  - mask: true
+    name: update-engine.service
+  - mask: true
+    name: locksmithd.service
