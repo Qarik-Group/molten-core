@@ -5,8 +5,9 @@ ct -out-file ../coreos-vagrant/config.ign \
    -in-file <(bosh int container-linux-config.yaml \
                    -o <(echo '[{"type":"remove","path":"/storage"}]'))
 
-if [ -d "../coreos-vagrant" ]; then
+if [ ! -d "../coreos-vagrant" ]; then
   echo "Please clone the following repo: https://github.com/coreos/coreos-vagrant in ../coreos-vagrant"
+  exit 1
 fi
 
 pushd ../coreos-vagrant

@@ -2,7 +2,7 @@
 
 tmpVDI=/tmp/cloned.vdi
 boxName=coreos-stable
-resizeTo=25600
+resizeTo=35000
 
 diskUUID() {
     VBoxManage list hdds | grep -B4 ${1} | grep -e '^UUID' | awk 'END {print $2}'
