@@ -9,11 +9,11 @@ storage:
   files:
   - contents:
       remote:
-        url: https://github.com/starkandwayne/molten-core/releases/download/v0.5.0/mc
+        url: https://github.com/starkandwayne/molten-core/releases/download/v0.6.0/mc
         verification:
           hash:
             function: sha512
-            sum: c9cc8e873bf1a2081673c8647d94ed5f028a2661e1fba4e2c71789f0eb7be598e46ad4b0a98ba9238626c40a65d86c985b6acf64267c9f04fa811429b617b530
+            sum: 16e160d9a4ae43076fdc44116e09a0b4e169fa10bb41de825022f5444b65b3150582f4e0200931ccd07c3a42f78d527b26b768c394a6d63cdc06c59de70882dc
     filesystem: root
     mode: 755
     path: /opt/bin/mc
