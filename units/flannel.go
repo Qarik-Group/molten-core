@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	confNetworkCMDTmpl = `/usr/bin/etcdctl set /coreos.com/network/config "{\"Network\": \"%s\"}"`
+	confNetworkCMDTmpl = `/usr/bin/etcdctl set /coreos.com/network/config '{"Network": "%s", "Backend": {"Type": "vxlan"}}'`
 	flannelOPTSTmpl    = `FLANNEL_OPTS="--iface=%s --public-ip=%s"`
 )
 
