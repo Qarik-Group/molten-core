@@ -76,11 +76,14 @@ resources:
       - type: replace
         path: /instance_groups/name=worker/update?/max_in_flight
         value: 100%
+      - type: replace
+        path: /instance_groups/name=master/update?/max_in_flight
+        value: 100%
       # latest stemcell
       - path: /stemcells/alias=default/version
         type: replace
         value: latest
-      # flannel udp
+      # use udp backend for inner flannel (outer uses vxlan)
       - type: replace
         path: /instance_groups/name=master/jobs/name=flanneld/properties/backend-type?
         value: udp
