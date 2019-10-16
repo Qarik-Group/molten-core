@@ -3,6 +3,14 @@ A lightweight foundation for running containerized platforms on top of bare-meta
 using: [CoreOS Container Linux](https://coreos.com/why/) and
 [BUCC](https://github.com/starkandwayne/bucc) (BOSH, UAA, Credhub and Concourse).
 
+## Project Status
+This project should not be used for production systems as we still need to tackle:
+- Backup & Restore
+- Disaster Recovery
+- Drain bosh instances on host shutdown
+- Re-enable Container Linux Auto Updates
+For more details about what we are planning for Phase 3 read [the blog post](https://starkandwayne.com/blog/forging-bare-metal-introducing-molte-core).
+
 ## Deployment
 Use one of the following terraform projects to deploy a MoltenCore Cluster:
 
