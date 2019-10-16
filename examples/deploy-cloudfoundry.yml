@@ -79,19 +79,22 @@ resources:
       # make zones configurable
       - type: replace
         path: /instance_groups/name=scheduler/azs
-        value: ((moltencore.other_azs))
+        value: ((moltencore.all_azs))
+      - type: replace
+        path: /instance_groups/name=scheduler/instances
+        value: ((moltencore.sizes.all_azs.x1))
       - type: replace
         path: /instance_groups/name=router/azs
-        value: ((moltencore.other_azs))
+        value: ((moltencore.all_azs))
       - type: replace
         path: /instance_groups/name=router/instances
-        value: ((moltencore.sizes.other_azs.x1))
+        value: ((moltencore.sizes.all_azs.x1))
       - type: replace
         path: /instance_groups/name=tcp-router/azs
-        value: ((moltencore.other_azs))
+        value: ((moltencore.all_azs))
       - type: replace
         path: /instance_groups/name=tcp-router/instances
-        value: ((moltencore.sizes.other_azs.x1))
+        value: ((moltencore.sizes.all_azs.x1))
       - type: replace
         path: /instance_groups/name=nats/azs
         value: ((moltencore.all_azs))
