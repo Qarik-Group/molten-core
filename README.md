@@ -9,6 +9,7 @@ This project should not be used for production systems as we still need to tackl
 - Disaster Recovery
 - Drain bosh instances on host shutdown
 - Re-enable Container Linux Auto Updates
+
 For more details about what we are planning for Phase 3 read [the blog post](https://starkandwayne.com/blog/forging-bare-metal-introducing-molte-core).
 
 ## Deployment
