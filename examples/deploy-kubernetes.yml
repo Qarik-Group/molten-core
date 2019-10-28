@@ -19,7 +19,7 @@ jobs:
       - kubo-deployment/manifests/ops-files/add-hostname-to-master-certificate.yml
       - opsfile/opsfile.yml
       vars:
-        api-hostname: ((moltencore.public_ips.z0))
+        api-hostname: ((domain))
   - put: errand
     params:
       name: apply-specs
@@ -39,7 +39,7 @@ jobs:
         CREDHUB_CLIENT: ((credhub_username))
         CREDHUB_SECRET: ((credhub_password))
         cluster: ((bosh_name))/cfcr
-        apiserver: https://((moltencore.public_ips.z0)):8443
+        apiserver: https://((domain)):8443
       run:
         path: /bin/bash
         args:

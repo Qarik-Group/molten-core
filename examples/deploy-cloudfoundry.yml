@@ -20,7 +20,7 @@ jobs:
       - cf-deployment/operations/experimental/fast-deploy-with-downtime-and-danger.yml
       - opsfile/opsfile.yml
       vars:
-        system_domain: ((moltencore.public_ips.z0)).xip.io
+        system_domain: ((domain))
 - name: generate-cf-cli-login-snippet
   public: false
   plan:
@@ -36,7 +36,7 @@ jobs:
         CREDHUB_CLIENT: ((credhub_username))
         CREDHUB_SECRET: ((credhub_password))
         prefix: ((bosh_name))/cf
-        api: https://api.((moltencore.public_ips.z0)).xip.io
+        api: https://((domain))
       run:
         path: /bin/bash
         args:
