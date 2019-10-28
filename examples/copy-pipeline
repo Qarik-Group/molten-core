@@ -1,14 +1,17 @@
 #!/bin/bash
 file=""
 name=""
+flags=""
 case ${1} in
     cf|cloudfoundry)
         name=cf
         file=cloudfoundry
+        flags=--var=domain=${2:-((moltencore.public_ips.z0)).xip.io}
         ;;
     k8s|kubernetes)
         name=k8s
         file=kubernetes
+        flags=--var=domain=${2:-((moltencore.public_ips.z0))}
         ;;
     *)
         echo "usage: ./examples/copy-pipeline cf|k8s"
@@ -16,4 +19,4 @@ case ${1} in
         ;;
 esac
 
-echo "fly -t mc set-pipeline -p deploy-${name} -c <(echo '$(spruce json examples/deploy-${file}.yml)')"
+echo "fly -t mc set-pipeline -p deploy-${name} ${flags} -c <(echo '$(spruce json examples/deploy-${file}.yml)')"
