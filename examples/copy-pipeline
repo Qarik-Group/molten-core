@@ -6,12 +6,12 @@ case ${1} in
     cf|cloudfoundry)
         name=cf
         file=cloudfoundry
-        flags=--var=domain=${2:-((moltencore.public_ips.z0)).xip.io}
+        flags="--var='domain=${2:-((moltencore.public_ips.z0)).xip.io}'"
         ;;
     k8s|kubernetes)
         name=k8s
         file=kubernetes
-        flags=--var=domain=${2:-((moltencore.public_ips.z0))}
+        flags="--var='domain=${2:-((moltencore.public_ips.z0))}'"
         ;;
     *)
         echo "usage: ./examples/copy-pipeline cf|k8s"
