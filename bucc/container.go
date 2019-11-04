@@ -86,7 +86,7 @@ func (c *Client) UpdateRuntimeConfig(confs *[]config.NodeConfig) error {
 }
 
 func (c *Client) UpdateMoltenCoreConfig(confs *[]config.NodeConfig) error {
-	data, err := renderMoltenCoreConfig(confs)
+	data, err := RenderMoltenCoreConfig(confs)
 	if err != nil {
 		return fmt.Errorf("failed to render MoltenCore Config: %s", err)
 	}

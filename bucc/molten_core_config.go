@@ -3,6 +3,8 @@ package bucc
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+
 	"github.com/starkandwayne/molten-core/config"
 )
 
@@ -23,7 +25,7 @@ type sizes struct {
 	AllAZs   map[string]int `json:"all_azs"`
 }
 
-func renderMoltenCoreConfig(confs *[]config.NodeConfig) (string, error) {
+func RenderMoltenCoreConfig(confs *[]config.NodeConfig) (string, error) {
 	var mcconf moltenCoreConfig
 	mcconf.PublicIPs = make(map[string]string)
 	for _, conf := range *confs {
@@ -36,6 +38,13 @@ func renderMoltenCoreConfig(confs *[]config.NodeConfig) (string, error) {
 			mcconf.OtherAZs = append(mcconf.OtherAZs, conf.Zone())
 		}
 	}
+
+	if len(*confs) == 1 {
+		mcconf.OtherAZs = mcconf.AllAZs
+	}
+
+	sort.Strings(mcconf.OtherAZs)
+	sort.Strings(mcconf.AllAZs)
 
 	mcconf.Sizes.AllAZs = make(map[string]int)
 	mcconf.Sizes.OtherAZs = make(map[string]int)
