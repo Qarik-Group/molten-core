@@ -9,48 +9,68 @@ import (
 )
 
 var (
-	sizeMultipliers = []int{1, 2, 4, 8, 16, 32, 64}
+	allSizes = []int{1, 2, 4, 8, 16, 32, 64}
 )
 
 type moltenCoreConfig struct {
-	SingletonAZ string            `json:"singleton_az"`
-	OtherAZs    []string          `json:"other_azs"`
-	AllAZs      []string          `json:"all_azs"`
-	PublicIPs   map[string]string `json:"public_ips"`
-	Sizes       sizes             `json:"sizes"`
+	PublicIPs map[string]string `json:"public_ips"`
+	Scaling   scaling           `json:"scaling"`
 }
 
-type sizes struct {
-	OtherAZs map[string]int `json:"other_azs"`
-	AllAZs   map[string]int `json:"all_azs"`
+type scaling struct {
+	Odd3 map[string]azsAndInstances `json:"odd3"`
+	Odd5 map[string]azsAndInstances `json:"odd5"`
+	Max1 map[string]azsAndInstances `json:"max1"`
+	Max2 map[string]azsAndInstances `json:"max2"`
+	Max3 map[string]azsAndInstances `json:"max3"`
+	All  map[string]azsAndInstances `json:"all"`
+}
+
+type azsAndInstances struct {
+	Azs       []string `json:"azs"`
+	Instances int      `json:"instances"`
 }
 
 func RenderMoltenCoreConfig(confs *[]config.NodeConfig) (string, error) {
 	var mcconf moltenCoreConfig
+
+	azs := make([]string, 0)
 	mcconf.PublicIPs = make(map[string]string)
 	for _, conf := range *confs {
-		mcconf.AllAZs = append(mcconf.AllAZs, conf.Zone())
 		mcconf.PublicIPs[conf.Zone()] = conf.PublicIP.String()
+		azs = append(azs, conf.Zone())
+	}
+	sort.Strings(azs)
 
-		if conf.IsSingletonZone() {
-			mcconf.SingletonAZ = conf.Zone()
-		} else {
-			mcconf.OtherAZs = append(mcconf.OtherAZs, conf.Zone())
-		}
+	mcconf.Scaling.All = make(map[string]azsAndInstances)
+	for _, size := range allSizes {
+		mcconf.Scaling.All[fmt.Sprintf("x%d",
+			size)] = azsAndInstances{azs, size * len(azs)}
 	}
 
-	if len(*confs) == 1 {
-		mcconf.OtherAZs = mcconf.AllAZs
-	}
+	mcconf.Scaling.Max1 = slice(azs, 1, 1)
 
-	sort.Strings(mcconf.OtherAZs)
-	sort.Strings(mcconf.AllAZs)
-
-	mcconf.Sizes.AllAZs = make(map[string]int)
-	mcconf.Sizes.OtherAZs = make(map[string]int)
-	for _, size := range sizeMultipliers {
-		mcconf.Sizes.AllAZs[fmt.Sprintf("x%d", size)] = size * len(mcconf.AllAZs)
-		mcconf.Sizes.OtherAZs[fmt.Sprintf("x%d", size)] = size * len(mcconf.OtherAZs)
+	switch size := len(*confs); {
+	case size == 1:
+		mcconf.Scaling.Max2 = slice(azs, size, 5)
+		mcconf.Scaling.Max3 = slice(azs, size, 3)
+		mcconf.Scaling.Odd3 = slice(azs, 1, 3)
+		mcconf.Scaling.Odd5 = slice(azs, 1, 2)
+	case size == 2:
+		mcconf.Scaling.Max2 = slice(azs, 2, 5)
+		mcconf.Scaling.Max3 = slice(azs, size, 3)
+		mcconf.Scaling.Odd3 = slice(azs, 1, 3)
+		mcconf.Scaling.Odd5 = slice(azs, 1, 2)
+	case size < 5:
+		mcconf.Scaling.Max2 = slice(azs, 2, 5)
+		mcconf.Scaling.Max3 = slice(azs, 3, 3)
+		mcconf.Scaling.Odd3 = slice(azs, 3, 3)
+		mcconf.Scaling.Odd5 = slice(azs, 3, 2)
+	case size >= 5:
+		mcconf.Scaling.Max2 = slice(azs, 2, 5)
+		mcconf.Scaling.Max3 = slice(azs, 3, 3)
+		mcconf.Scaling.Odd3 = slice(azs, 3, 3)
+		mcconf.Scaling.Odd5 = slice(azs, 5, 2)
 	}
 
 	raw, err := json.Marshal(mcconf)
@@ -59,4 +79,24 @@ func RenderMoltenCoreConfig(confs *[]config.NodeConfig) (string, error) {
 	}
 
 	return string(raw), nil
+}
+
+func slice(azs []string, size int, slices int) map[string]azsAndInstances {
+	out := make(map[string]azsAndInstances)
+
+	for i := 0; i < slices; i++ {
+		if size > len(azs) {
+			size = len(azs)
+		}
+		j := i * size
+		k := (i + 1) * size
+		if k > len(azs) {
+			j = 0
+			k = size
+		}
+
+		out[fmt.Sprintf("slice%d", i+1)] = azsAndInstances{azs[j:k], size}
+	}
+
+	return out
 }

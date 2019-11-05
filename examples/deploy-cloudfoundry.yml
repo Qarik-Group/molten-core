@@ -13,6 +13,7 @@ jobs:
   - put: deploy
     params:
       manifest: cf-deployment/cf-deployment.yml
+      fix: true
       stemcells: [ stemcell/stemcell.tgz ]
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
@@ -36,7 +37,7 @@ jobs:
         CREDHUB_CLIENT: ((credhub_username))
         CREDHUB_SECRET: ((credhub_password))
         prefix: ((bosh_name))/cf
-        api: https://((domain))
+        api: https://api.((domain))
       run:
         path: /bin/bash
         args:
@@ -79,67 +80,106 @@ resources:
       # make zones configurable
       - type: replace
         path: /instance_groups/name=scheduler/azs
-        value: ((moltencore.all_azs))
+        value: ((moltencore.scaling.max3.slice1.azs))
       - type: replace
         path: /instance_groups/name=scheduler/instances
-        value: ((moltencore.sizes.all_azs.x1))
+        value: ((moltencore.scaling.max3.slice1.instances))
       - type: replace
         path: /instance_groups/name=router/azs
-        value: ((moltencore.all_azs))
+        value: ((moltencore.scaling.max3.slice1.azs))
       - type: replace
         path: /instance_groups/name=router/instances
-        value: ((moltencore.sizes.all_azs.x1))
+        value: ((moltencore.scaling.max3.slice1.instances))
       - type: replace
         path: /instance_groups/name=tcp-router/azs
-        value: ((moltencore.all_azs))
+        value: ((moltencore.scaling.max3.slice1.azs))
       - type: replace
         path: /instance_groups/name=tcp-router/instances
-        value: ((moltencore.sizes.all_azs.x1))
+        value: ((moltencore.scaling.max3.slice1.instances))
       - type: replace
         path: /instance_groups/name=nats/azs
-        value: ((moltencore.all_azs))
+        value: ((moltencore.scaling.max2.slice3.azs))
+      - type: replace
+        path: /instance_groups/name=nats/instances
+        value: ((moltencore.scaling.max2.slice3.instances))
       - type: replace
         path: /instance_groups/name=diego-api/azs
-        value: ((moltencore.other_azs))
+        value: ((moltencore.scaling.max2.slice2.azs))
+      - type: replace
+        path: /instance_groups/name=diego-api/instances
+        value: ((moltencore.scaling.max2.slice2.instances))
       - type: replace
         path: /instance_groups/name=uaa/azs
-        value: ((moltencore.other_azs))
+        value: ((moltencore.scaling.max2.slice3.azs))
+      - type: replace
+        path: /instance_groups/name=uaa/instances
+        value: ((moltencore.scaling.max2.slice3.instances))
       - type: replace
         path: /instance_groups/name=diego-cell/azs
-        value: ((moltencore.all_azs))
+        value: ((moltencore.scaling.all.x2.azs))
       - type: replace
         path: /instance_groups/name=diego-cell/instances
-        value: ((moltencore.sizes.all_azs.x2))
+        value: ((moltencore.scaling.all.x2.instances))
       - type: replace
         path: /instance_groups/name=api/azs
-        value: ((moltencore.other_azs))
+        value: ((moltencore.scaling.max2.slice2.azs))
+      - type: replace
+        path: /instance_groups/name=api/instances
+        value: ((moltencore.scaling.max2.slice2.instances))
       - type: replace
         path: /instance_groups/name=cc-worker/azs
-        value: ((moltencore.other_azs))
+        value: ((moltencore.scaling.max2.slice2.azs))
+      - type: replace
+        path: /instance_groups/name=cc-worker/instances
+        value: ((moltencore.scaling.max2.slice2.instances))
       - type: replace
         path: /instance_groups/name=adapter/azs
-        value: ((moltencore.other_azs))
+        value: ((moltencore.scaling.max2.slice3.azs))
+      - type: replace
+        path: /instance_groups/name=adapter/instances
+        value: ((moltencore.scaling.max2.slice3.instances))
       - type: replace
         path: /instance_groups/name=doppler/azs
-        value: ((moltencore.other_azs))
+        value: ((moltencore.scaling.max2.slice3.azs))
+      - type: replace
+        path: /instance_groups/name=doppler/instances
+        value: ((moltencore.scaling.max2.slice3.instances))
       - type: replace
         path: /instance_groups/name=log-api/azs
-        value: ((moltencore.other_azs))
+        value: ((moltencore.scaling.max2.slice3.azs))
+      - type: replace
+        path: /instance_groups/name=log-api/instances
+        value: ((moltencore.scaling.max2.slice3.instances))
       - type: replace
         path: /instance_groups/name=credhub/azs
-        value: ((moltencore.other_azs))
+        value: ((moltencore.scaling.max2.slice3.azs))
+      - type: replace
+        path: /instance_groups/name=credhub/instances
+        value: ((moltencore.scaling.max2.slice3.instances))
       - type: replace
         path: /instance_groups/name=database/azs
-        value: [ ((moltencore.singleton_az)) ]
+        value: ((moltencore.scaling.odd3.slice1.azs))
+      - type: replace
+        path: /instance_groups/name=database/instances
+        value: ((moltencore.scaling.odd3.slice1.instances))
       - type: replace
         path: /instance_groups/name=singleton-blobstore/azs
-        value: [ ((moltencore.singleton_az)) ]
+        value: ((moltencore.scaling.max1.slice1.azs))
+      - type: replace
+        path: /instance_groups/name=singleton-blobstore/instances
+        value: ((moltencore.scaling.max1.slice1.instances))
       - type: replace
         path: /instance_groups/name=smoke-tests/azs
-        value: [ ((moltencore.singleton_az)) ]
+        value: ((moltencore.scaling.max1.slice1.azs))
+      - type: replace
+        path: /instance_groups/name=smoke-tests/instances
+        value: ((moltencore.scaling.max1.slice1.instances))
       - type: replace
         path: /instance_groups/name=rotate-cc-database-key/azs
-        value: [ ((moltencore.singleton_az)) ]
+        value: ((moltencore.scaling.max1.slice1.azs))
+      - type: replace
+        path: /instance_groups/name=rotate-cc-database-key/instances
+        value: ((moltencore.scaling.max1.slice1.instances))
 
 - name: cloud-config
   type: file
