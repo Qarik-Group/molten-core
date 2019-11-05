@@ -1,0 +1,9 @@
+#!/bin/bash -e
+
+export GOOS=linux
+export GOARCH=amd64
+go build -o mc-${GOOS}-${GOARCH} main.go
+
+scp mc-linux-amd64 $1:/tmp/mc
+ssh $1 'sudo mkdir -p /opt/bin && sudo mv /tmp/mc /opt/bin/mc && chmod +x /opt/bin/mc'
+ssh $1 'sudo systemctl restart mc.service'
