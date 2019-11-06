@@ -18,7 +18,6 @@ jobs:
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
       - cf-deployment/operations/use-latest-stemcell.yml
-      - cf-deployment/operations/experimental/fast-deploy-with-downtime-and-danger.yml
       - opsfile/opsfile.yml
       vars:
         system_domain: ((domain))
