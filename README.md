@@ -21,11 +21,17 @@ Use one of the following terraform projects to deploy a MoltenCore Cluster:
 Once your cluster is deployed you can check on the status the embedded BUCC service.
 
 ## Locating BUCC
-The `bucc.service` will be started by systemd on the node with the lowest
-internal ip (zone: z0).
+MoltenCore nodes have expect to be given a unique zone index (via `--zone` flag).
+This should be taken care of by the infrastructure specific terraform project
+(by passing on `count.index`). The zone index is used for naming the BOSH
+availability zones (z0, z1, z2, etc).
 
-Once you have sshed into `z0` systemd can be used to check the status and the
-progress of the `bucc.service` deployment.
+The first node (z0) will host BUCC, and will be used for all management tasks.
+But before we can interact with BUCC we need to make sure it is up and running.
+The `bucc.service` will be started by systemd on the node with the first
+
+Once you have sshed into __node z0__ systemd can be used to check the status and the
+progress of the `bucc.service`.
 
 ```
 systemctl status bucc.service
@@ -34,7 +40,7 @@ journalctl -f -u bucc.service
 
 ## Accessing BUCC
 Make sure to locate your BUCC first (using the above paragraph), and make sure
-it is running. Now from `z0` you can start an interactive management shell with:
+it is running. Now from __node z0__ you can start an interactive management shell with:
 
 ```
 mc shell
