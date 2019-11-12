@@ -66,23 +66,6 @@ resources:
   source:
     filename: opsfile.yml
     content:
-      # speed up deploy
-      - type: replace
-        path: /update/initial_deploy_az_update_strategy?
-        value: parallel
-      - type: replace
-        path: /update/canaries
-        value: 0
-      - type: replace
-        path: /instance_groups/name=worker/update?/max_in_flight
-        value: 100%
-      - type: replace
-        path: /instance_groups/name=master/update?/max_in_flight
-        value: 100%
-      # latest stemcell
-      - path: /stemcells/alias=default/version
-        type: replace
-        value: latest
       # use udp backend for inner flannel (outer uses vxlan)
       - type: replace
         path: /instance_groups/name=master/jobs/name=flanneld/properties/backend-type?
@@ -93,19 +76,19 @@ resources:
       # scale according to cluster size
       - type: replace
         path: /instance_groups/name=master/azs
-        value: ((moltencore.all_azs))
+        value: ((moltencore.scaling.odd3.slice1.azs))
       - type: replace
         path: /instance_groups/name=master/instances
-        value: ((moltencore.sizes.all_azs.x1))
+        value: ((moltencore.scaling.odd3.slice1.instances))
       - type: replace
         path: /instance_groups/name=apply-addons/azs
-        value: [ ((moltencore.singleton_az)) ]
+        value: ((moltencore.scaling.max2.slice1.azs))
       - type: replace
         path: /instance_groups/name=worker/azs
-        value: ((moltencore.all_azs))
+        value: ((moltencore.scaling.all.x2.azs))
       - type: replace
         path: /instance_groups/name=worker/instances
-        value: ((moltencore.sizes.all_azs.x2))
+        value: ((moltencore.scaling.all.x2.instances))
 
 - name: cloud-config
   type: file
