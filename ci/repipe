@@ -1,3 +1,3 @@
 #!/bin/bash
 
-fly -t ci2 set-pipeline -c ci/pipeline.yml -p molten-core
+fly -t pipes@moltencore set-pipeline -c ci/pipeline.yml -p molten-core
