@@ -58,6 +58,8 @@ const (
         },
         "Memory": "4294967296"
         "KernelMemory": "6442450944"
+	"MemorySwappiness": "1"
+	"MemorySwap": "4294967296"
       }
     },
     {
@@ -68,6 +70,8 @@ const (
         },
         "Memory": "1073741824"
         "KernelMemory": "2147483648"
+	"MemorySwappiness": "1"
+	"MemorySwap": "1073741824"
       }
     },
     {
@@ -78,6 +82,8 @@ const (
         },
         "Memory": "2147483648"
         "KernelMemory": "4294967296"
+	"MemorySwappiness": "1"
+	"MemorySwap": "2147483648"
       }
     },
     {
@@ -88,6 +94,9 @@ const (
         },
         "Memory": "4294967296"
         "KernelMemory": "6442450944"
+	"MemorySwappiness": "1"
+	"MemorySwap": "4294967296"
+
       }
     }
   ],
