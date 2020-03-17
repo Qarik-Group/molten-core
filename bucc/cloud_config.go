@@ -55,31 +55,39 @@ const (
       "cloud_properties": {
         "RestartPolicy": {
           "Name": "always"
-        }
+        },
+        "Memory": "4294967296"
+        "KernelMemory": "6442450944"
       }
     },
     {
       "name": "minimal",
       "cloud_properties": {
-	"RestartPolicy": {
-	  "Name": "always"
-	}
+        "RestartPolicy": {
+          "Name": "always"
+        },
+        "Memory": "1073741824"
+        "KernelMemory": "2147483648"
       }
     },
     {
       "name": "small",
       "cloud_properties": {
-	"RestartPolicy": {
-	  "Name": "always"
-	}
+        "RestartPolicy": {
+          "Name": "always"
+        },
+        "Memory": "2147483648"
+        "KernelMemory": "4294967296"
       }
     },
     {
       "name": "small-highmem",
       "cloud_properties": {
-	"RestartPolicy": {
-	  "Name": "always"
-	}
+        "RestartPolicy": {
+          "Name": "always"
+        },
+        "Memory": "4294967296"
+        "KernelMemory": "6442450944"
       }
     }
   ],
